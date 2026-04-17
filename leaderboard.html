@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Stormray Stats — Season Leaderboard</title>
+<meta name="theme-color" content="#0a0a0a">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0a0a;--card:#141414;--border:#2a2a2a;--text:#fff;--text2:#999;--blue:#4169E1}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);
+  padding:24px;padding-top:max(24px,env(safe-area-inset-top));min-height:100vh}
+.header{text-align:center;margin-bottom:28px}
+.header .brand{font-size:12px;color:var(--blue);font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-bottom:4px}
+.header h1{font-size:26px;font-weight:800;margin-bottom:6px}
+.header .record{font-size:15px;color:var(--text2)}
+.header .record .w{color:#22c55e;font-weight:700}.header .record .l{color:#ef4444;font-weight:700}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;max-width:1200px;margin:0 auto}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px}
+.cat-label{font-size:11px;color:var(--blue);font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.leader{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.leader-left{display:flex;align-items:center;gap:10px}
+.avatar{width:40px;height:40px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex-shrink:0}
+.leader-name{font-weight:700;font-size:16px}
+.leader-rank{font-size:11px;color:var(--text2)}
+.leader-value{font-size:26px;font-weight:800;color:var(--blue)}
+.runners{border-top:1px solid var(--border);padding-top:6px}
+.runner{display:flex;align-items:center;justify-content:space-between;padding:4px 0;font-size:13px;color:var(--text2)}
+.runner-val{font-weight:700;color:var(--text)}
+.empty{text-align:center;padding:60px 20px;color:var(--text2);font-size:16px}
+.footer{text-align:center;margin-top:32px;font-size:11px;color:#444;letter-spacing:1px;text-transform:uppercase}
+@media(max-width:430px){body{padding:14px}.header h1{font-size:21px}.grid{grid-template-columns:1fr;gap:10px}
+  .leader-value{font-size:22px}.avatar{width:34px;height:34px;font-size:13px}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+// Reads from the same localStorage as the main app
+const DB={
+  get:(k,d)=>{try{const v=localStorage.getItem('stormray_'+k);return v?JSON.parse(v):d}catch{return d}},
+  getRoster:()=>DB.get('roster',[]),
+  getGames:()=>DB.get('games',[]),
+};
+
+function calcPlayerStats(game,pid){
+  const shots=(game.shots||[]).filter(s=>s.pid===pid);
+  const fgm=shots.filter(s=>s.made).length,fga=shots.length;
+  const tpm=shots.filter(s=>s.made&&s.is3).length,tpa=shots.filter(s=>s.is3).length;
+  const ps=game.playerStats||{},p=ps[pid]||{};
+  const ftm=p.ftm||0,fta=(p.ftm||0)+(p.ftx||0);
+  const pts=(fgm-tpm)*2+tpm*3+ftm;
+  return {fgm,fga,tpm,tpa,ftm,fta,pts,reb:p.reb||0,ast:p.ast||0,stl:p.stl||0,blk:p.blk||0,to:p.to||0,
+    hustle:(game.hustlePlays||[]).filter(h=>h.pid===pid).length};
+}
+
+function calcTeamStats(game){
+  const pids=game.activePlayers||[];
+  const t={pts:0};pids.forEach(pid=>{t.pts+=calcPlayerStats(game,pid).pts});return t;
+}
+
+function render(){
+  const roster=DB.getRoster(),games=DB.getGames().filter(g=>g.status==='completed');
+  const root=document.getElementById('root');
+
+  if(!games.length||!roster.length){
+    root.innerHTML='<div class="header"><div class="brand">Stormray Basketball</div><h1>Season Leaderboard</h1></div><div class="empty">No completed games yet.<br>Leaderboards will appear after the first game.</div>';
+    return;
+  }
+
+  const stats={};
+  roster.forEach(p=>{stats[p.id]={gp:0,pts:0,reb:0,ast:0,stl:0,blk:0,to:0,fgm:0,fga:0,tpm:0,tpa:0,ftm:0,fta:0,hustle:0,charges:0}});
+  games.forEach(g=>{
+    (g.activePlayers||[]).forEach(pid=>{
+      if(!stats[pid])return;
+      const s=calcPlayerStats(g,pid),ps=stats[pid];
+      ps.gp++;ps.pts+=s.pts;ps.reb+=s.reb;ps.ast+=s.ast;ps.stl+=s.stl;ps.blk+=s.blk;ps.to+=s.to;
+      ps.fgm+=s.fgm;ps.fga+=s.fga;ps.tpm+=s.tpm;ps.tpa+=s.tpa;ps.ftm+=s.ftm;ps.fta+=s.fta;ps.hustle+=s.hustle;
+    });
+    (g.hustlePlays||[]).forEach(h=>{if(stats[h.pid]&&h.tag==='Took a charge')stats[h.pid].charges++});
+  });
+
+  const wins=games.filter(g=>{const t=calcTeamStats(g);return t.pts>(g.oppScore||0)}).length;
+  const losses=games.length-wins;
+
+  const find=(label,icon,fn,fmt)=>{
+    const el=roster.filter(p=>stats[p.id]?.gp>0);
+    if(!el.length)return null;
+    const sorted=[...el].sort((a,b)=>fn(stats[b.id])-fn(stats[a.id]));
+    const top=sorted[0];const v=fn(stats[top.id]);if(v<=0)return null;
+    const runners=sorted.slice(1,3).filter(p=>fn(stats[p.id])>0);
+    return {label,icon,leader:{name:top.name,number:top.number,value:fmt?fmt(stats[top.id]):v},
+      runners:runners.map(p=>({name:p.name,number:p.number,value:fmt?fmt(stats[p.id]):fn(stats[p.id])}))};
+  };
+
+  const pctFmt=(num,den)=>s=>den(s)>0?((num(s)/den(s))*100).toFixed(1)+'%':'-';
+  const eff=s=>s.pts+s.reb+s.ast+s.stl+s.blk-(s.fga-s.fgm)-(s.fta-s.ftm)-s.to;
+
+  const categories=[
+    find('Points Leader','\u{1F3C0}',s=>s.pts),
+    find('Rebound Leader','\u{1F4AA}',s=>s.reb),
+    find('Assists Leader','\u{1F3AF}',s=>s.ast),
+    find('Steals Leader','\u{1F512}',s=>s.stl),
+    find('Blocks Leader','\u{1F6AB}',s=>s.blk),
+    find('3-Point Leader','\u{1F3AF}',s=>s.tpm),
+    (()=>{
+      const el=roster.filter(p=>stats[p.id]?.gp>0&&stats[p.id]?.fta>=5);
+      if(!el.length)return null;
+      const sorted=[...el].sort((a,b)=>(stats[b.id].ftm/stats[b.id].fta)-(stats[a.id].ftm/stats[a.id].fta));
+      const top=sorted[0];const pct=((stats[top.id].ftm/stats[top.id].fta)*100).toFixed(1);
+      const runners=sorted.slice(1,3).filter(p=>stats[p.id].ftm>0);
+      return {label:'FT% Leader',icon:'\u{1F396}',leader:{name:top.name,number:top.number,value:pct+'%'},
+        runners:runners.map(p=>({name:p.name,number:p.number,value:((stats[p.id].ftm/stats[p.id].fta)*100).toFixed(1)+'%'}))};
+    })(),
+    (()=>{
+      const el=roster.filter(p=>stats[p.id]?.gp>0&&stats[p.id]?.fga>=10);
+      if(!el.length)return null;
+      const sorted=[...el].sort((a,b)=>(stats[b.id].fgm/stats[b.id].fga)-(stats[a.id].fgm/stats[a.id].fga));
+      const top=sorted[0];const pct=((stats[top.id].fgm/stats[top.id].fga)*100).toFixed(1);
+      const runners=sorted.slice(1,3).filter(p=>stats[p.id].fgm>0);
+      return {label:'FG% Leader',icon:'\u{1F4C8}',leader:{name:top.name,number:top.number,value:pct+'%'},
+        runners:runners.map(p=>({name:p.name,number:p.number,value:((stats[p.id].fgm/stats[p.id].fga)*100).toFixed(1)+'%'}))};
+    })(),
+    find('Charge Leader','\u26A1',s=>s.charges),
+    find('Hustle Play Leader','\u{1F525}',s=>s.hustle),
+    (()=>{
+      const el=roster.filter(p=>stats[p.id]?.gp>=2);
+      if(!el.length)return null;
+      const sorted=[...el].sort((a,b)=>(stats[a.id].to/stats[a.id].gp)-(stats[b.id].to/stats[b.id].gp));
+      const top=sorted[0];const avg=(stats[top.id].to/stats[top.id].gp).toFixed(1);
+      const runners=sorted.slice(1,3);
+      return {label:'Fewest Turnovers/Game',icon:'\u{1F9E0}',leader:{name:top.name,number:top.number,value:avg},
+        runners:runners.map(p=>({name:p.name,number:p.number,value:(stats[p.id].to/stats[p.id].gp).toFixed(1)}))};
+    })(),
+    find('Efficiency Leader','\u{1F451}',s=>eff(s)),
+  ].filter(Boolean);
+
+  let html=`<div class="header"><div class="brand">\u26A1 Stormray Basketball</div><h1>Season Leaderboard</h1>
+    <div class="record">${games.length} Games \u00B7 <span class="w">${wins}</span>-<span class="l">${losses}</span></div></div>`;
+  html+='<div class="grid">';
+  categories.forEach(cat=>{
+    html+=`<div class="card"><div class="cat-label"><span>${cat.icon}</span>${cat.label}</div>
+      <div class="leader"><div class="leader-left"><div class="avatar">${cat.leader.number}</div>
+      <div><div class="leader-name">${cat.leader.name}</div><div class="leader-rank">#1</div></div></div>
+      <div class="leader-value">${cat.leader.value}</div></div>`;
+    if(cat.runners.length){
+      html+='<div class="runners">';
+      cat.runners.forEach((r,i)=>{html+=`<div class="runner"><span>#${i+2} \u00B7 #${r.number} ${r.name}</span><span class="runner-val">${r.value}</span></div>`});
+      html+='</div>';
+    }
+    html+='</div>';
+  });
+  html+='</div><div class="footer">\u26A1 Powered by Stormray Stats</div>';
+  root.innerHTML=html;
+}
+
+render();
+// Auto-refresh every 30 seconds to pick up new game data
+setInterval(render,30000);
+</script>
+</body>
+</html>
