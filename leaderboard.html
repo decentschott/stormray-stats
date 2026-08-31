@@ -15,6 +15,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .header h1{font-size:26px;font-weight:800;margin-bottom:6px}
 .header .record{font-size:15px;color:var(--text2)}
 .header .record .w{color:#22c55e;font-weight:700}.header .record .l{color:#ef4444;font-weight:700}
+.live-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;margin-right:6px;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;max-width:1200px;margin:0 auto}
 .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px}
 .cat-label{font-size:11px;color:var(--blue);font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:6px}
@@ -35,108 +37,89 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 </head>
 <body>
 <div id="root"></div>
+<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-database-compat.js"></script>
 <script>
-// Reads from the same localStorage as the main app
-const DB={
-  get:(k,d)=>{try{const v=localStorage.getItem('stormray_'+k);return v?JSON.parse(v):d}catch{return d}},
-  getRoster:()=>DB.get('roster',[]),
-  getGames:()=>DB.get('games',[]),
-};
+firebase.initializeApp({
+  apiKey:"AIzaSyB0a3hS3Fe-X1UpojdfaOdvt2yuTsL81ag",
+  authDomain:"shorewoodhoops-19d1d.firebaseapp.com",
+  databaseURL:"https://shorewoodhoops-19d1d-default-rtdb.firebaseio.com",
+  projectId:"shorewoodhoops-19d1d",
+  storageBucket:"shorewoodhoops-19d1d.firebasestorage.app",
+  messagingSenderId:"977266607962",
+  appId:"1:977266607962:web:73567ce96d582ff342d563"
+});
+const db=firebase.database();
+const toArr=v=>Array.isArray(v)?v:(v?Object.values(v):[]);
+const objToArr=o=>o?Object.values(o):[];
 
 function calcPlayerStats(game,pid){
-  const shots=(game.shots||[]).filter(s=>s.pid===pid);
+  const shots=objToArr(game.shots).filter(s=>s.pid===pid);
   const fgm=shots.filter(s=>s.made).length,fga=shots.length;
   const tpm=shots.filter(s=>s.made&&s.is3).length,tpa=shots.filter(s=>s.is3).length;
   const ps=game.playerStats||{},p=ps[pid]||{};
   const ftm=p.ftm||0,fta=(p.ftm||0)+(p.ftx||0);
   const pts=(fgm-tpm)*2+tpm*3+ftm;
   return {fgm,fga,tpm,tpa,ftm,fta,pts,reb:p.reb||0,ast:p.ast||0,stl:p.stl||0,blk:p.blk||0,to:p.to||0,
-    hustle:(game.hustlePlays||[]).filter(h=>h.pid===pid).length};
+    hustle:objToArr(game.hustlePlays).filter(h=>h.pid===pid).length};
 }
 
 function calcTeamStats(game){
-  const pids=game.activePlayers||[];
-  const t={pts:0};pids.forEach(pid=>{t.pts+=calcPlayerStats(game,pid).pts});return t;
+  const pids=toArr(game.activePlayers);let pts=0;
+  pids.forEach(pid=>{pts+=calcPlayerStats(game,pid).pts});return{pts};
 }
 
-function render(){
-  const roster=DB.getRoster(),games=DB.getGames().filter(g=>g.status==='completed');
+function render(roster,games){
   const root=document.getElementById('root');
-
-  if(!games.length||!roster.length){
-    root.innerHTML='<div class="header"><div class="brand">Stormray Basketball</div><h1>Season Leaderboard</h1></div><div class="empty">No completed games yet.<br>Leaderboards will appear after the first game.</div>';
+  const completed=Object.values(games).filter(g=>g.status==='completed');
+  if(!completed.length||!roster.length){
+    root.innerHTML='<div class="header"><div class="brand">⚡ Stormray Basketball</div><h1>Season Leaderboard</h1></div><div class="empty">No completed games yet.<br>Leaderboards will appear after the first game.</div>';
     return;
   }
-
   const stats={};
   roster.forEach(p=>{stats[p.id]={gp:0,pts:0,reb:0,ast:0,stl:0,blk:0,to:0,fgm:0,fga:0,tpm:0,tpa:0,ftm:0,fta:0,hustle:0,charges:0}});
-  games.forEach(g=>{
-    (g.activePlayers||[]).forEach(pid=>{
+  completed.forEach(g=>{
+    toArr(g.activePlayers).forEach(pid=>{
       if(!stats[pid])return;
       const s=calcPlayerStats(g,pid),ps=stats[pid];
       ps.gp++;ps.pts+=s.pts;ps.reb+=s.reb;ps.ast+=s.ast;ps.stl+=s.stl;ps.blk+=s.blk;ps.to+=s.to;
       ps.fgm+=s.fgm;ps.fga+=s.fga;ps.tpm+=s.tpm;ps.tpa+=s.tpa;ps.ftm+=s.ftm;ps.fta+=s.fta;ps.hustle+=s.hustle;
     });
-    (g.hustlePlays||[]).forEach(h=>{if(stats[h.pid]&&h.tag==='Took a charge')stats[h.pid].charges++});
+    objToArr(g.hustlePlays).forEach(h=>{if(stats[h.pid]&&h.tag==='Took a charge')stats[h.pid].charges++});
   });
-
-  const wins=games.filter(g=>{const t=calcTeamStats(g);return t.pts>(g.oppScore||0)}).length;
-  const losses=games.length-wins;
-
-  const find=(label,icon,fn,fmt)=>{
-    const el=roster.filter(p=>stats[p.id]?.gp>0);
-    if(!el.length)return null;
-    const sorted=[...el].sort((a,b)=>fn(stats[b.id])-fn(stats[a.id]));
-    const top=sorted[0];const v=fn(stats[top.id]);if(v<=0)return null;
+  const wins=completed.filter(g=>calcTeamStats(g).pts>(g.oppScore||0)).length,losses=completed.length-wins;
+  const find=(label,icon,fn)=>{
+    const el=roster.filter(p=>stats[p.id]?.gp>0),sorted=[...el].sort((a,b)=>fn(stats[b.id])-fn(stats[a.id]));
+    if(!sorted.length)return null;const top=sorted[0];const v=fn(stats[top.id]);if(v<=0)return null;
     const runners=sorted.slice(1,3).filter(p=>fn(stats[p.id])>0);
-    return {label,icon,leader:{name:top.name,number:top.number,value:fmt?fmt(stats[top.id]):v},
-      runners:runners.map(p=>({name:p.name,number:p.number,value:fmt?fmt(stats[p.id]):fn(stats[p.id])}))};
+    return{label,icon,leader:{name:top.name,number:top.number,value:v},runners:runners.map(p=>({name:p.name,number:p.number,value:fn(stats[p.id])}))};
   };
-
-  const pctFmt=(num,den)=>s=>den(s)>0?((num(s)/den(s))*100).toFixed(1)+'%':'-';
   const eff=s=>s.pts+s.reb+s.ast+s.stl+s.blk-(s.fga-s.fgm)-(s.fta-s.ftm)-s.to;
+  const pctCat=(label,icon,numK,denK,minDen)=>{
+    const el=roster.filter(p=>stats[p.id]?.gp>0&&stats[p.id][denK]>=minDen);
+    if(!el.length)return null;
+    const sorted=[...el].sort((a,b)=>(stats[b.id][numK]/stats[b.id][denK])-(stats[a.id][numK]/stats[a.id][denK]));
+    const top=sorted[0];const pct=((stats[top.id][numK]/stats[top.id][denK])*100).toFixed(1);
+    const runners=sorted.slice(1,3).filter(p=>stats[p.id][numK]>0);
+    return{label,icon,leader:{name:top.name,number:top.number,value:pct+'%'},
+      runners:runners.map(p=>({name:p.name,number:p.number,value:((stats[p.id][numK]/stats[p.id][denK])*100).toFixed(1)+'%'}))};
+  };
+  const toCat=(()=>{
+    const el=roster.filter(p=>stats[p.id]?.gp>=2);if(!el.length)return null;
+    const sorted=[...el].sort((a,b)=>(stats[a.id].to/stats[a.id].gp)-(stats[b.id].to/stats[b.id].gp));
+    const top=sorted[0];const runners=sorted.slice(1,3);
+    return{label:'Fewest TO/Game',icon:'\u{1F9E0}',leader:{name:top.name,number:top.number,value:(stats[top.id].to/stats[top.id].gp).toFixed(1)},
+      runners:runners.map(p=>({name:p.name,number:p.number,value:(stats[p.id].to/stats[p.id].gp).toFixed(1)}))};
+  })();
+  const categories=[find('Points Leader','\u{1F3C0}',s=>s.pts),find('Rebound Leader','\u{1F4AA}',s=>s.reb),
+    find('Assists Leader','\u{1F3AF}',s=>s.ast),find('Steals Leader','\u{1F512}',s=>s.stl),
+    find('Blocks Leader','\u{1F6AB}',s=>s.blk),find('3-Point Leader','\u{1F3AF}',s=>s.tpm),
+    pctCat('FT% Leader','\u{1F396}','ftm','fta',5),pctCat('FG% Leader','\u{1F4C8}','fgm','fga',10),
+    find('Charge Leader','⚡',s=>s.charges),find('Hustle Play Leader','\u{1F525}',s=>s.hustle),
+    toCat,find('Efficiency Leader','\u{1F451}',s=>eff(s))].filter(Boolean);
 
-  const categories=[
-    find('Points Leader','\u{1F3C0}',s=>s.pts),
-    find('Rebound Leader','\u{1F4AA}',s=>s.reb),
-    find('Assists Leader','\u{1F3AF}',s=>s.ast),
-    find('Steals Leader','\u{1F512}',s=>s.stl),
-    find('Blocks Leader','\u{1F6AB}',s=>s.blk),
-    find('3-Point Leader','\u{1F3AF}',s=>s.tpm),
-    (()=>{
-      const el=roster.filter(p=>stats[p.id]?.gp>0&&stats[p.id]?.fta>=5);
-      if(!el.length)return null;
-      const sorted=[...el].sort((a,b)=>(stats[b.id].ftm/stats[b.id].fta)-(stats[a.id].ftm/stats[a.id].fta));
-      const top=sorted[0];const pct=((stats[top.id].ftm/stats[top.id].fta)*100).toFixed(1);
-      const runners=sorted.slice(1,3).filter(p=>stats[p.id].ftm>0);
-      return {label:'FT% Leader',icon:'\u{1F396}',leader:{name:top.name,number:top.number,value:pct+'%'},
-        runners:runners.map(p=>({name:p.name,number:p.number,value:((stats[p.id].ftm/stats[p.id].fta)*100).toFixed(1)+'%'}))};
-    })(),
-    (()=>{
-      const el=roster.filter(p=>stats[p.id]?.gp>0&&stats[p.id]?.fga>=10);
-      if(!el.length)return null;
-      const sorted=[...el].sort((a,b)=>(stats[b.id].fgm/stats[b.id].fga)-(stats[a.id].fgm/stats[a.id].fga));
-      const top=sorted[0];const pct=((stats[top.id].fgm/stats[top.id].fga)*100).toFixed(1);
-      const runners=sorted.slice(1,3).filter(p=>stats[p.id].fgm>0);
-      return {label:'FG% Leader',icon:'\u{1F4C8}',leader:{name:top.name,number:top.number,value:pct+'%'},
-        runners:runners.map(p=>({name:p.name,number:p.number,value:((stats[p.id].fgm/stats[p.id].fga)*100).toFixed(1)+'%'}))};
-    })(),
-    find('Charge Leader','\u26A1',s=>s.charges),
-    find('Hustle Play Leader','\u{1F525}',s=>s.hustle),
-    (()=>{
-      const el=roster.filter(p=>stats[p.id]?.gp>=2);
-      if(!el.length)return null;
-      const sorted=[...el].sort((a,b)=>(stats[a.id].to/stats[a.id].gp)-(stats[b.id].to/stats[b.id].gp));
-      const top=sorted[0];const avg=(stats[top.id].to/stats[top.id].gp).toFixed(1);
-      const runners=sorted.slice(1,3);
-      return {label:'Fewest Turnovers/Game',icon:'\u{1F9E0}',leader:{name:top.name,number:top.number,value:avg},
-        runners:runners.map(p=>({name:p.name,number:p.number,value:(stats[p.id].to/stats[p.id].gp).toFixed(1)}))};
-    })(),
-    find('Efficiency Leader','\u{1F451}',s=>eff(s)),
-  ].filter(Boolean);
-
-  let html=`<div class="header"><div class="brand">\u26A1 Stormray Basketball</div><h1>Season Leaderboard</h1>
-    <div class="record">${games.length} Games \u00B7 <span class="w">${wins}</span>-<span class="l">${losses}</span></div></div>`;
+  let html=`<div class="header"><div class="brand">⚡ Stormray Basketball</div><h1>Season Leaderboard</h1>
+    <div class="record"><span class="live-dot"></span>Live from Firebase &middot; ${completed.length} Games &middot; <span class="w">${wins}</span>-<span class="l">${losses}</span></div></div>`;
   html+='<div class="grid">';
   categories.forEach(cat=>{
     html+=`<div class="card"><div class="cat-label"><span>${cat.icon}</span>${cat.label}</div>
@@ -145,18 +128,19 @@ function render(){
       <div class="leader-value">${cat.leader.value}</div></div>`;
     if(cat.runners.length){
       html+='<div class="runners">';
-      cat.runners.forEach((r,i)=>{html+=`<div class="runner"><span>#${i+2} \u00B7 #${r.number} ${r.name}</span><span class="runner-val">${r.value}</span></div>`});
+      cat.runners.forEach((r,i)=>{html+=`<div class="runner"><span>#${i+2} &middot; #${r.number} ${r.name}</span><span class="runner-val">${r.value}</span></div>`});
       html+='</div>';
     }
     html+='</div>';
   });
-  html+='</div><div class="footer">\u26A1 Powered by Stormray Stats</div>';
+  html+='</div><div class="footer">⚡ Powered by Stormray Stats</div>';
   root.innerHTML=html;
 }
 
-render();
-// Auto-refresh every 30 seconds to pick up new game data
-setInterval(render,30000);
+// Listen for real-time updates from Firebase
+let _roster=[],_games={};
+db.ref('roster').on('value',snap=>{_roster=snap.val()?toArr(snap.val()):[];render(_roster,_games)});
+db.ref('games').on('value',snap=>{_games=snap.val()||{};render(_roster,_games)});
 </script>
 </body>
 </html>
