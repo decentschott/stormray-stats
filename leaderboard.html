@@ -52,6 +52,10 @@ firebase.initializeApp({
 const db=firebase.database();
 const toArr=v=>Array.isArray(v)?v:(v?Object.values(v):[]);
 const objToArr=o=>o?Object.values(o):[];
+function getOppScore(game){
+  if(game.oppScoreByQ){const q=game.oppScoreByQ;return(q[1]||0)+(q[2]||0)+(q[3]||0)+(q[4]||0)+(q[5]||0)}
+  return game.oppScore||0;
+}
 
 function calcPlayerStats(game,pid){
   const shots=objToArr(game.shots).filter(s=>s.pid===pid);
@@ -87,7 +91,7 @@ function render(roster,games){
     });
     objToArr(g.hustlePlays).forEach(h=>{if(stats[h.pid]&&h.tag==='Took a charge')stats[h.pid].charges++});
   });
-  const wins=completed.filter(g=>calcTeamStats(g).pts>(g.oppScore||0)).length,losses=completed.length-wins;
+  const wins=completed.filter(g=>calcTeamStats(g).pts>(getOppScore(g))).length,losses=completed.length-wins;
   const find=(label,icon,fn)=>{
     const el=roster.filter(p=>stats[p.id]?.gp>0),sorted=[...el].sort((a,b)=>fn(stats[b.id])-fn(stats[a.id]));
     if(!sorted.length)return null;const top=sorted[0];const v=fn(stats[top.id]);if(v<=0)return null;

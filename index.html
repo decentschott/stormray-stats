@@ -186,6 +186,12 @@ const toArr=v=>Array.isArray(v)?v:(v?Object.values(v):[]);
 const objToArr=o=>o?Object.values(o):[];
 const HUSTLE_TAGS=['Dove for loose ball','Took a charge','Deflection','Box out','Hustle back on D','Saved possession','50/50 ball','Screen & recover'];
 
+// Opponent score helper — supports both legacy oppScore and per-quarter oppScoreByQ
+function getOppScore(game){
+  if(game.oppScoreByQ){const q=game.oppScoreByQ;return(q[1]||0)+(q[2]||0)+(q[3]||0)+(q[4]||0)+(q[5]||0)}
+  return getOppScore(game);
+}
+
 // === STAT CALCULATIONS ===
 function calcPlayerStats(game,pid){
   const shots=objToArr(game.shots).filter(s=>s.pid===pid);
@@ -306,6 +312,7 @@ function HustleModal({roster,activePlayers,selectedPid,onSave,onClose}){
 // === GAME BAR (shared) ===
 function GameBar({game,gameId,teamPts,role,showOppScore,setShowOppScore}){
   const setQ=q=>db.ref(`games/${gameId}/quarter`).set(q);
+  const opp=getOppScore(game);
   return h('div',{className:'game-bar'},
     h('div',null,
       h('div',{style:{fontSize:12,color:'var(--text2)',display:'flex',alignItems:'center',gap:6}},
@@ -314,20 +321,30 @@ function GameBar({game,gameId,teamPts,role,showOppScore,setShowOppScore}){
       h('div',{className:'score-display'},
         h('span',null,teamPts),
         h('span',{className:'vs-label'},'—'),
-        h('span',{onClick:()=>setShowOppScore&&setShowOppScore(true),style:{cursor:'pointer'}},game.oppScore||0))),
+        h('span',{onClick:()=>setShowOppScore&&setShowOppScore(true),style:{cursor:'pointer'}},opp))),
     h('div',{className:'quarter-pills'},
       [1,2,3,4].map(q=>h('button',{key:q,className:game.quarter===q?'active':'',onClick:()=>setQ(q)},`Q${q}`)),
       h('button',{className:game.quarter===5?'active':'',onClick:()=>setQ(5)},'OT')));
 }
 
-// === OPP SCORE MODAL ===
+// === OPP SCORE MODAL (by quarter) ===
 function OppScoreModal({game,gameId,onClose}){
+  const qLabels=[{q:1,l:'Q1'},{q:2,l:'Q2'},{q:3,l:'Q3'},{q:4,l:'Q4'},{q:5,l:'OT'}];
+  const byQ=game.oppScoreByQ||{};
+  const total=getOppScore(game);
+  const setQScore=(q,val)=>db.ref(`games/${gameId}/oppScoreByQ/${q}`).set(parseInt(val)||0);
   return h('div',{className:'modal-overlay',onClick:onClose},
     h('div',{className:'modal',onClick:e=>e.stopPropagation()},
       h('h3',null,'Opponent Score'),
-      h('input',{type:'number',inputMode:'numeric',placeholder:'Score',defaultValue:game.oppScore||0,
-        style:{width:'100%',fontSize:24,textAlign:'center',marginBottom:12},
-        onBlur:e=>db.ref(`games/${gameId}/oppScore`).set(parseInt(e.target.value)||0),autoFocus:true}),
+      h('div',{style:{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:8,marginBottom:16}},
+        qLabels.map(({q,l})=>h('div',{key:q,style:{textAlign:'center'}},
+          h('div',{style:{fontSize:11,color:'var(--text2)',fontWeight:700,marginBottom:4}},l),
+          h('input',{type:'number',inputMode:'numeric',defaultValue:byQ[q]||0,
+            style:{width:'100%',fontSize:18,textAlign:'center',padding:8},
+            onBlur:e=>setQScore(q,e.target.value)})))),
+      h('div',{style:{textAlign:'center',fontSize:28,fontWeight:800,marginBottom:16}},
+        h('span',{style:{color:'var(--text2)',fontSize:12,fontWeight:600,display:'block',marginBottom:4}},'TOTAL'),
+        total),
       h('button',{className:'btn btn-blue',style:{width:'100%'},onClick:onClose},'Done')));
 }
 
@@ -547,11 +564,11 @@ function PostGameReport({gameId,games,roster}){
         h('div',{style:{fontSize:22,fontWeight:800,marginBottom:4}},`vs ${game.opponent}`),
         h('div',{style:{fontSize:14,color:'var(--text2)',marginBottom:8}},new Date(game.date).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'})),
         h('div',{style:{fontSize:36,fontWeight:800}},
-          h('span',{style:{color:team.pts>(game.oppScore||0)?'var(--green)':'var(--red)'}},team.pts),
+          h('span',{style:{color:team.pts>(getOppScore(game))?'var(--green)':'var(--red)'}},team.pts),
           h('span',{style:{color:'var(--text2)',margin:'0 12px',fontSize:20}},'—'),
-          h('span',null,game.oppScore||0)),
-        h('div',{style:{fontSize:12,color:team.pts>(game.oppScore||0)?'var(--green)':'var(--red)',fontWeight:700,marginTop:4}},
-          team.pts>(game.oppScore||0)?'WIN':team.pts<(game.oppScore||0)?'LOSS':'TIE')),
+          h('span',null,getOppScore(game))),
+        h('div',{style:{fontSize:12,color:team.pts>(getOppScore(game))?'var(--green)':'var(--red)',fontWeight:700,marginTop:4}},
+          team.pts>(getOppScore(game))?'WIN':team.pts<(getOppScore(game))?'LOSS':'TIE')),
       h('div',{className:'report-section'},h('h3',null,'🏆 Stat Leaders'),
         leaderItems.map(l=>h('div',{key:l.label,className:'leader-row'},
           h('div',null,h('span',{style:{fontSize:12,color:'var(--text2)',marginRight:8}},l.label),
@@ -625,7 +642,7 @@ function GameSetupScreen({roster,onStart}){
       onClick:()=>{const gameId=uid();const playerStats={};
         selected.forEach(pid=>{playerStats[pid]={reb:0,ast:0,stl:0,blk:0,to:0,foul:0,ftm:0,ftx:0}});
         const game={id:gameId,opponent:opp.trim(),date:new Date().toISOString().slice(0,10),
-          status:'active',activePlayers:selected,quarter:1,oppScore:0,playerStats,shots:{},hustlePlays:{},roles:{}};
+          status:'active',activePlayers:selected,quarter:1,oppScoreByQ:{1:0,2:0,3:0,4:0,5:0},playerStats,shots:{},hustlePlays:{},roles:{}};
         db.ref('games/'+gameId).set(game);onStart(gameId)}},'Start Game'));
 }
 
@@ -751,18 +768,24 @@ function LeaderboardScreen({roster,games}){
 // === GAME HISTORY ===
 function GameHistoryScreen({roster,games,onViewReport}){
   const gamesList=Object.values(games).sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const deleteGame=(e,gId)=>{e.stopPropagation();
+    if(confirm('Delete this game and all its stats? This cannot be undone.'))db.ref('games/'+gId).remove()};
   if(!gamesList.length)return h('div',{className:'empty'},'No games yet');
   return h('div',null,h('h2',null,'Game History'),
-    gamesList.map(g=>{const team=calcTeamStats(g);const won=team.pts>(g.oppScore||0);
+    gamesList.map(g=>{const team=calcTeamStats(g);const opp=getOppScore(g);const won=team.pts>opp;
       return h('div',{key:g.id,className:'game-list-item',onClick:()=>g.status==='completed'&&onViewReport(g.id)},
-        h('div',null,
+        h('div',{style:{flex:1}},
           h('div',{className:'game-opponent'},`vs ${g.opponent}`),
           h('div',{className:'game-date'},new Date(g.date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})),
           h('span',{className:'badge',style:{background:g.status==='active'?'rgba(245,158,11,.2)':'rgba(65,105,225,.1)',
             color:g.status==='active'?'var(--orange)':'var(--blue)',marginTop:4}},g.status==='active'?'LIVE':'FINAL')),
-        h('div',{style:{textAlign:'right'}},
-          h('div',{className:'game-score',style:{color:won?'var(--green)':'var(--red)'}},`${team.pts} - ${g.oppScore||0}`),
-          g.status==='completed'&&h('div',{style:{fontSize:12,fontWeight:700,color:won?'var(--green)':'var(--red)'}},won?'W':'L')))}));
+        h('div',{style:{display:'flex',alignItems:'center',gap:12}},
+          h('div',{style:{textAlign:'right'}},
+            h('div',{className:'game-score',style:{color:won?'var(--green)':'var(--red)'}},`${team.pts} - ${opp}`),
+            g.status==='completed'&&h('div',{style:{fontSize:12,fontWeight:700,color:won?'var(--green)':'var(--red)'}},won?'W':'L')),
+          h('button',{onClick:e=>deleteGame(e,g.id),
+            style:{background:'none',color:'var(--text2)',fontSize:18,padding:8,borderRadius:6,border:'none',cursor:'pointer'},
+            title:'Delete game'},'🗑️')))}));
 }
 
 // === MAIN APP ===
@@ -826,7 +849,7 @@ function App(){
   return h('div',{className:'app'},
     h('div',{className:'header'},
       h('div',{className:'logo'},
-        h('span',{className:'bolt'},'⚡'),h('span',null,'Stormray Stats')),
+        h('img',{src:'logo.png',alt:'Shorewood',style:{height:32,width:'auto',objectFit:'contain'}}),h('span',null,'Stormray Stats')),
       h('div',{style:{display:'flex',alignItems:'center',gap:8}},
         h('div',{className:'conn'},h('span',{className:`conn-dot ${connected?'conn-on':'conn-off'}`}),connected?'Live':'Offline'),
         isLive&&h('button',{className:'btn btn-dark btn-sm',onClick:leaveGame},'Leave'),
