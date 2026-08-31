@@ -189,7 +189,7 @@ const HUSTLE_TAGS=['Dove for loose ball','Took a charge','Deflection','Box out',
 // Opponent score helper — supports both legacy oppScore and per-quarter oppScoreByQ
 function getOppScore(game){
   if(game.oppScoreByQ){const q=game.oppScoreByQ;return(q[1]||0)+(q[2]||0)+(q[3]||0)+(q[4]||0)+(q[5]||0)}
-  return getOppScore(game);
+  return game.oppScore||0;
 }
 
 // === STAT CALCULATIONS ===
@@ -487,8 +487,8 @@ function CoachView({game,gameId,roster,onEnd}){
         h('div',{className:'court-container',style:{maxHeight:400}},
           h(HalfCourt,{shots:allShots,readOnly:true})),
         h('div',{style:{display:'flex',justifyContent:'center',gap:16,padding:8,fontSize:13}},
-          h('span',null,'⬤',{style:{color:'var(--green)',marginRight:4}},' Made: ',allShots.filter(s=>s.made).length),
-          h('span',null,'⬤',{style:{color:'var(--red)',marginRight:4}},' Miss: ',allShots.filter(s=>!s.made).length),
+          h('span',{style:{color:'var(--green)'}},'⬤ Made: ',allShots.filter(s=>s.made).length),
+          h('span',{style:{color:'var(--red)'}},'⬤ Miss: ',allShots.filter(s=>!s.made).length),
           h('span',null,'FG: ',teamStats.fgp,'%'),h('span',null,'3P: ',teamStats.tpp,'%'))),
       tab==='hustle'&&h('div',null,
         hustles.length===0?h('div',{className:'empty'},'No hustle plays yet'):
@@ -685,7 +685,7 @@ function SeasonStatsScreen({roster,games}){
       ftm:(s.ftm/gp).toFixed(1),fta:(s.fta/gp).toFixed(1),reb:(s.reb/gp).toFixed(1),ast:(s.ast/gp).toFixed(1),stl:(s.stl/gp).toFixed(1),blk:(s.blk/gp).toFixed(1),to:(s.to/gp).toFixed(1),hustle:s.hustle};
     return{name:`#${p.number} ${p.name}`,gp:s.gp,pts:s.pts,fgm:s.fgm,fga:s.fga,fgp:s.fga?(s.fgm/s.fga*100).toFixed(0)+'%':'-',
       tpm:s.tpm,tpa:s.tpa,tpp:s.tpa?(s.tpm/s.tpa*100).toFixed(0)+'%':'-',ftm:s.ftm,fta:s.fta,reb:s.reb,ast:s.ast,stl:s.stl,blk:s.blk,to:s.to,hustle:s.hustle}});
-  const wins=completed.filter(g=>{const t=calcTeamStats(g);return t.pts>(g.oppScore||0)}).length,losses=completed.length-wins;
+  const wins=completed.filter(g=>{const t=calcTeamStats(g);return t.pts>getOppScore(g)}).length,losses=completed.length-wins;
   return h('div',null,
     h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}},
       h('h2',{style:{margin:0}},'Season Stats'),
@@ -742,7 +742,7 @@ function LeaderboardScreen({roster,games}){
   const completed=Object.values(games).filter(g=>g.status==='completed');
   const categories=calcLeaderboard(roster,completed);
   if(!categories.length)return h('div',{className:'empty'},'No completed games yet. Leaderboards appear after the first game.');
-  const wins=completed.filter(g=>calcTeamStats(g).pts>(g.oppScore||0)).length,losses=completed.length-wins;
+  const wins=completed.filter(g=>calcTeamStats(g).pts>getOppScore(g)).length,losses=completed.length-wins;
   return h('div',null,
     h('div',{style:{textAlign:'center',marginBottom:20}},
       h('div',{style:{fontSize:12,color:'var(--blue)',fontWeight:700,letterSpacing:3,textTransform:'uppercase',marginBottom:4}},'Stormray Basketball'),
