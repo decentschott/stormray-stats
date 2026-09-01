@@ -80,6 +80,18 @@ h2{font-size:20px;font-weight:700;margin-bottom:16px}
 .leader-stat{font-weight:800;font-size:20px;color:var(--blue)}
 .hustle-row{padding:10px 12px;background:var(--card2);border-radius:8px;margin-bottom:6px}
 .hustle-tag{display:inline-block;padding:2px 8px;border-radius:4px;background:rgba(65,105,225,.2);color:var(--blue);font-size:11px;font-weight:600;margin-right:6px}
+.snap-periods{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px}
+.snap-pill{padding:6px 12px;border-radius:16px;font-size:12px;font-weight:600;background:var(--card2);color:var(--text2);border:1px solid var(--border);cursor:pointer}
+.snap-pill.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+.snap-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.snap-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px}
+.snap-card-title{font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.snap-big{font-size:32px;font-weight:800;color:var(--blue);line-height:1}
+.snap-sub{font-size:12px;color:var(--text2);margin-top:2px}
+.snap-row{display:flex;gap:12px;margin-top:6px}
+.snap-split{flex:1;text-align:center;font-size:13px}
+.snap-split-label{display:block;font-size:9px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
+.snap-leader-row{display:flex;justify-content:space-between;font-size:12px;padding:3px 0;border-bottom:1px solid var(--border)}
 .compelling-stat{text-align:center;padding:24px;background:rgba(65,105,225,.1);border:2px solid var(--blue);border-radius:12px;font-size:20px;font-weight:700}
 .season-table{width:100%;border-collapse:collapse;font-size:11px;overflow-x:auto;display:block}
 .season-table th{padding:8px 4px;text-align:center;font-weight:700;color:var(--text2);border-bottom:2px solid var(--blue);font-size:9px;text-transform:uppercase;white-space:nowrap;position:sticky;top:0;background:var(--card)}
@@ -201,13 +213,13 @@ function calcPlayerStats(game,pid){
   const ftm=p.ftm||0,fta=(p.ftm||0)+(p.ftx||0);
   const pts=(fgm-tpm)*2+tpm*3+ftm;
   return {fgm,fga,fgp:fga?((fgm/fga)*100).toFixed(0):'-',tpm,tpa,tpp:tpa?((tpm/tpa)*100).toFixed(0):'-',
-    ftm,fta,ftp:fta?((ftm/fta)*100).toFixed(0):'-',pts,reb:p.reb||0,ast:p.ast||0,stl:p.stl||0,blk:p.blk||0,
+    ftm,fta,ftx:p.ftx||0,ftp:fta?((ftm/fta)*100).toFixed(0):'-',pts,reb:p.reb||0,oreb:p.oreb||0,dreb:p.dreb||0,ast:p.ast||0,stl:p.stl||0,blk:p.blk||0,
     to:p.to||0,foul:p.foul||0,hustle:objToArr(game.hustlePlays).filter(hp=>hp.pid===pid).length};
 }
 
 function calcTeamStats(game){
   const pids=toArr(game.activePlayers);
-  const team={fgm:0,fga:0,tpm:0,tpa:0,ftm:0,fta:0,pts:0,reb:0,ast:0,stl:0,blk:0,to:0,foul:0,hustle:0};
+  const team={fgm:0,fga:0,tpm:0,tpa:0,ftm:0,fta:0,ftx:0,pts:0,reb:0,oreb:0,dreb:0,ast:0,stl:0,blk:0,to:0,foul:0,hustle:0};
   pids.forEach(pid=>{const s=calcPlayerStats(game,pid);Object.keys(team).forEach(k=>{if(typeof s[k]==='number')team[k]+=s[k]})});
   team.fgp=team.fga?((team.fgm/team.fga)*100).toFixed(1):'-';
   team.tpp=team.tpa?((team.tpm/team.tpa)*100).toFixed(1):'-';
@@ -374,13 +386,20 @@ function OffenseView({game,gameId,roster,onEnd}){
   const addShot=shot=>{shot.quarter=game.quarter;
     db.ref(`games/${gameId}/shots/${shot.id}`).set(shot);
     setUndoStack(s=>[...s,{type:'shot',id:shot.id}])};
-  const addStat=key=>{if(!selPid)return;
-    const prev=game.playerStats?.[selPid]?.[key]||0;
-    db.ref(`games/${gameId}/playerStats/${selPid}/${key}`).set(prev+1);
-    setUndoStack(s=>[...s,{type:'stat',pid:selPid,key,prev}])};
+  const addStat=(...keys)=>{if(!selPid)return;
+    const items=keys.map(key=>{
+      const prev=game.playerStats?.[selPid]?.[key]||0;
+      db.ref(`games/${gameId}/playerStats/${selPid}/${key}`).set(prev+1);
+      const qPrev=game.statsByQ?.[game.quarter]?.[selPid]?.[key]||0;
+      db.ref(`games/${gameId}/statsByQ/${game.quarter}/${selPid}/${key}`).set(qPrev+1);
+      return {pid:selPid,key,prev,qPrev,quarter:game.quarter};
+    });
+    setUndoStack(s=>[...s,{type:'stat',items}])};
   const undo=()=>{if(!undoStack.length)return;const last=undoStack[undoStack.length-1];
     if(last.type==='shot')db.ref(`games/${gameId}/shots/${last.id}`).remove();
-    else if(last.type==='stat')db.ref(`games/${gameId}/playerStats/${last.pid}/${last.key}`).set(last.prev);
+    else if(last.type==='stat')last.items.forEach(it=>{
+      db.ref(`games/${gameId}/playerStats/${it.pid}/${it.key}`).set(it.prev);
+      db.ref(`games/${gameId}/statsByQ/${it.quarter}/${it.pid}/${it.key}`).set(it.qPrev);});
     setUndoStack(s=>s.slice(0,-1))};
   const endGame=()=>{if(confirm('End this game?')){db.ref(`games/${gameId}/status`).set('completed');onEnd(gameId)}};
 
@@ -420,15 +439,22 @@ function DefenseView({game,gameId,roster,onEnd}){
   const pStats=selPid?calcPlayerStats(game,selPid):{};
   const selPlayer=roster.find(p=>p.id===selPid);
 
-  const addStat=key=>{if(!selPid)return;
-    const prev=game.playerStats?.[selPid]?.[key]||0;
-    db.ref(`games/${gameId}/playerStats/${selPid}/${key}`).set(prev+1);
-    setUndoStack(s=>[...s,{type:'stat',pid:selPid,key,prev}])};
+  const addStat=(...keys)=>{if(!selPid)return;
+    const items=keys.map(key=>{
+      const prev=game.playerStats?.[selPid]?.[key]||0;
+      db.ref(`games/${gameId}/playerStats/${selPid}/${key}`).set(prev+1);
+      const qPrev=game.statsByQ?.[game.quarter]?.[selPid]?.[key]||0;
+      db.ref(`games/${gameId}/statsByQ/${game.quarter}/${selPid}/${key}`).set(qPrev+1);
+      return {pid:selPid,key,prev,qPrev,quarter:game.quarter};
+    });
+    setUndoStack(s=>[...s,{type:'stat',items}])};
   const addHustle=hp=>{hp.quarter=game.quarter;
     db.ref(`games/${gameId}/hustlePlays/${hp.id}`).set(hp);
     setUndoStack(s=>[...s,{type:'hustle',id:hp.id}]);setShowHustle(false)};
   const undo=()=>{if(!undoStack.length)return;const last=undoStack[undoStack.length-1];
-    if(last.type==='stat')db.ref(`games/${gameId}/playerStats/${last.pid}/${last.key}`).set(last.prev);
+    if(last.type==='stat')last.items.forEach(it=>{
+      db.ref(`games/${gameId}/playerStats/${it.pid}/${it.key}`).set(it.prev);
+      db.ref(`games/${gameId}/statsByQ/${it.quarter}/${it.pid}/${it.key}`).set(it.qPrev);});
     else if(last.type==='hustle')db.ref(`games/${gameId}/hustlePlays/${last.id}`).remove();
     setUndoStack(s=>s.slice(0,-1))};
   const endGame=()=>{if(confirm('End this game?')){db.ref(`games/${gameId}/status`).set('completed');onEnd(gameId)}};
@@ -436,23 +462,23 @@ function DefenseView({game,gameId,roster,onEnd}){
   return h('div',{className:'app',style:{height:'100%',display:'flex',flexDirection:'column'}},
     h(GameBar,{game,gameId,teamPts:teamStats.pts,role:'defense'}),
     h(PlayerChips,{game,roster,selPid,setSelPid,showStat:ps=>`${ps.reb}r ${ps.stl}s`}),
+
     // Defense gets a larger stat area instead of court
     h('div',{style:{flex:1,display:'flex',alignItems:'center',justifyContent:'center',padding:16}},
       selPlayer?h('div',{style:{textAlign:'center'}},
         h('div',{style:{fontSize:48,fontWeight:800,color:'var(--blue)',marginBottom:4}},selPlayer.number),
         h('div',{style:{fontSize:20,fontWeight:700,marginBottom:12}},selPlayer.name),
-        h('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr',gap:16,textAlign:'center'}},
-          [{k:'reb',l:'REB'},{k:'stl',l:'STL'},{k:'blk',l:'BLK'},{k:'foul',l:'PF'}].map(s=>
+        h('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr',gap:12,textAlign:'center'}},
+          [{k:'oreb',l:'OREB'},{k:'dreb',l:'DREB'},{k:'stl',l:'STL'},{k:'blk',l:'BLK'},{k:'foul',l:'PF'}].map(s=>
             h('div',{key:s.k},h('div',{style:{fontSize:28,fontWeight:800,color:'var(--blue)'}},pStats[s.k]||0),
               h('div',{style:{fontSize:11,color:'var(--text2)',fontWeight:700}},s.l))))):
         h('div',{className:'empty'},'Select a player')),
     h('div',{className:'stat-bar'},
-      h('div',{className:'grid4',style:{marginBottom:6}},
-        ['reb','stl','blk','foul'].map(key=>{
-          const labels={reb:'REB',stl:'STL',blk:'BLK',foul:'FOUL'};
-          const count=selPid&&game.playerStats?.[selPid]?game.playerStats[selPid][key]||0:0;
-          return h('button',{key,className:'stat-btn',onClick:()=>addStat(key)},
-            h('span',{className:'count'},count),h('span',null,labels[key]))})),
+      h('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr',gap:4,marginBottom:6}},
+        [{key:'oreb',label:'O-REB',extra:['reb']},{key:'dreb',label:'D-REB',extra:['reb']},{key:'stl',label:'STL'},{key:'blk',label:'BLK'},{key:'foul',label:'FOUL'}].map(s=>{
+          const count=selPid&&game.playerStats?.[selPid]?game.playerStats[selPid][s.key]||0:0;
+          return h('button',{key:s.key,className:'stat-btn',onClick:()=>addStat(s.key,...(s.extra||[]))},
+            h('span',{className:'count'},count),h('span',null,s.label))})),
       h('div',{className:'grid4'},
         h('button',{className:'stat-btn hustle',onClick:()=>setShowHustle(true)},'⚡ HUSTLE PLAY'),
         h('button',{className:'stat-btn undo',onClick:undo},'↩ UNDO')),
@@ -466,9 +492,100 @@ function DefenseView({game,gameId,roster,onEnd}){
         h('button',{className:'btn btn-dark',style:{marginTop:12,width:'100%'},onClick:()=>setShowBox(false)},'Close'))));
 }
 
+// === SNAPSHOT VIEW ===
+function SnapshotView({game,roster}){
+  const [period,setPeriod]=useState('full');
+  const periods=[{k:'q1',l:'Q1',qs:[1]},{k:'q2',l:'Q2',qs:[2]},{k:'1h',l:'1st Half',qs:[1,2]},
+    {k:'q3',l:'Q3',qs:[3]},{k:'q4',l:'Q4',qs:[4]},{k:'2h',l:'2nd Half',qs:[3,4]},{k:'full',l:'Full Game',qs:[1,2,3,4,5]}];
+  const activeQs=periods.find(p=>p.k===period)?.qs||[1,2,3,4,5];
+  const pids=toArr(game.activePlayers);
+
+  // Filter shots by period
+  const shots=objToArr(game.shots).filter(s=>activeQs.includes(s.quarter));
+  const fgm=shots.filter(s=>s.made).length,fga=shots.length;
+  const tpm=shots.filter(s=>s.made&&s.is3).length,tpa=shots.filter(s=>s.is3).length;
+  const twom=fgm-tpm,twoa=fga-tpa;
+
+  // Get stat for a player in the selected period
+  const getStat=(pid,key)=>{
+    if(period==='full')return game.playerStats?.[pid]?.[key]||0;
+    let t=0;activeQs.forEach(q=>{t+=game.statsByQ?.[q]?.[pid]?.[key]||0});return t;
+  };
+
+  // FT data
+  let totalFtm=0,totalFta=0;const ftPlayers=[];
+  pids.forEach(pid=>{const m=getStat(pid,'ftm'),x=getStat(pid,'ftx'),a=m+x;
+    totalFtm+=m;totalFta+=a;
+    if(a>0){const p=roster.find(r=>r.id===pid);ftPlayers.push({name:p?.name||'?',number:p?.number||'?',ftm:m,fta:a,pct:m/a})}});
+  const ftTop3=ftPlayers.sort((a,b)=>b.pct-a.pct).slice(0,3);
+
+  // Scoring
+  const scorers=[];
+  pids.forEach(pid=>{
+    const pShots=shots.filter(s=>s.pid===pid);
+    const pfgm=pShots.filter(s=>s.made).length,ptpm=pShots.filter(s=>s.made&&s.is3).length;
+    const pftm=getStat(pid,'ftm');
+    const pts=(pfgm-ptpm)*2+ptpm*3+pftm;
+    const p=roster.find(r=>r.id===pid);
+    scorers.push({pid,name:p?.name||'?',number:p?.number||'?',pts})});
+  scorers.sort((a,b)=>b.pts-a.pts);const topScorer=scorers[0];
+
+  // Rebounds
+  let totalReb=0,totalOreb=0,totalDreb=0;const rebounders=[];
+  pids.forEach(pid=>{const r=getStat(pid,'reb'),o=getStat(pid,'oreb'),d=getStat(pid,'dreb');
+    totalReb+=r;totalOreb+=o;totalDreb+=d;
+    const p=roster.find(rr=>rr.id===pid);
+    rebounders.push({name:p?.name||'?',number:p?.number||'?',reb:r})});
+  rebounders.sort((a,b)=>b.reb-a.reb);const topReb=rebounders[0];
+
+  // Hustle plays
+  const hustles=objToArr(game.hustlePlays).filter(hp=>activeQs.includes(hp.quarter));
+
+  const pct=(n,d)=>d>0?((n/d)*100).toFixed(1)+'%':'—';
+  const card=(title,children)=>h('div',{className:'snap-card'},h('div',{className:'snap-card-title'},title),children);
+
+  return h('div',null,
+    h('div',{className:'snap-periods'},
+      periods.map(p=>h('button',{key:p.k,className:'snap-pill'+(period===p.k?' active':''),onClick:()=>setPeriod(p.k)},p.l))),
+    h('div',{className:'snap-grid'},
+      card('Field Goals',h('div',null,
+        h('div',{className:'snap-big'},pct(fgm,fga)),
+        h('div',{className:'snap-sub'},fgm,'/',fga,' FG'),
+        h('div',{className:'snap-row'},
+          h('div',{className:'snap-split'},h('span',{className:'snap-split-label'},'2PT'),h('span',null,twom,'/',twoa,' ',pct(twom,twoa))),
+          h('div',{className:'snap-split'},h('span',{className:'snap-split-label'},'3PT'),h('span',null,tpm,'/',tpa,' ',pct(tpm,tpa)))))),
+      card('Free Throws',h('div',null,
+        h('div',{className:'snap-big'},pct(totalFtm,totalFta)),
+        h('div',{className:'snap-sub'},totalFtm,'/',totalFta,' FT'),
+        ftTop3.length>0&&h('div',{style:{marginTop:8}},
+          h('div',{style:{fontSize:10,color:'var(--text2)',fontWeight:700,marginBottom:4}},'TOP SHOOTERS'),
+          ftTop3.map((f,i)=>h('div',{key:i,className:'snap-leader-row'},
+            h('span',null,'#',f.number,' ',f.name),
+            h('span',{style:{fontWeight:700}},f.ftm,'/',f.fta,' ',pct(f.ftm,f.fta))))))),
+      card('Top Scorer',topScorer?h('div',{style:{textAlign:'center'}},
+        h('div',{style:{fontSize:36,fontWeight:800,color:'var(--blue)'}},topScorer.number),
+        h('div',{style:{fontWeight:700,fontSize:15}},topScorer.name),
+        h('div',{className:'snap-big',style:{marginTop:4}},topScorer.pts),
+        h('div',{className:'snap-sub'},'points')):h('div',{className:'snap-sub'},'No shots yet')),
+      card('Rebounds',h('div',null,
+        h('div',{className:'snap-big'},totalReb),
+        h('div',{className:'snap-row',style:{marginTop:4}},
+          h('div',{className:'snap-split'},h('span',{className:'snap-split-label'},'OFF'),h('span',null,totalOreb)),
+          h('div',{className:'snap-split'},h('span',{className:'snap-split-label'},'DEF'),h('span',null,totalDreb))),
+        topReb&&topReb.reb>0&&h('div',{style:{marginTop:8,fontSize:13,color:'var(--text2)'}},
+          'Top: ',h('span',{style:{color:'var(--text)',fontWeight:700}},'#',topReb.number,' ',topReb.name,' — ',topReb.reb)))),
+      card('Hustle Plays',h('div',null,
+        h('div',{className:'snap-big'},hustles.length),
+        hustles.length>0&&h('div',{style:{marginTop:8,maxHeight:120,overflow:'auto'}},
+          hustles.sort((a,b)=>(b.ts||0)-(a.ts||0)).slice(0,6).map(hp=>{
+            const p=roster.find(r=>r.id===hp.pid);
+            return h('div',{key:hp.id,style:{fontSize:12,padding:'3px 0',color:'var(--text2)'}},
+              h('span',{style:{color:'var(--text)',fontWeight:600}},p?`#${p.number}`:'?'),' ',hp.tag)}))))));
+}
+
 // === COACH VIEW ===
 function CoachView({game,gameId,roster,onEnd}){
-  const [tab,setTab]=useState('box');
+  const [tab,setTab]=useState('snapshot');
   const [showOpp,setShowOpp]=useState(false);
   const teamStats=calcTeamStats(game);
   const allShots=objToArr(game.shots);
@@ -479,9 +596,10 @@ function CoachView({game,gameId,roster,onEnd}){
   return h('div',{className:'app',style:{height:'100%',display:'flex',flexDirection:'column'}},
     h(GameBar,{game,gameId,teamPts:teamStats.pts,role:'coach',showOppScore:true,setShowOppScore:setShowOpp}),
     h('div',{className:'tab-bar',style:{margin:'8px 12px'}},
-      [{k:'box',l:'Box Score'},{k:'shots',l:'Shot Chart'},{k:'hustle',l:'Hustle'}].map(t=>
+      [{k:'snapshot',l:'Snapshot'},{k:'box',l:'Box Score'},{k:'shots',l:'Shot Chart'},{k:'hustle',l:'Hustle'}].map(t=>
         h('button',{key:t.k,className:tab===t.k?'active':'',onClick:()=>setTab(t.k)},t.l))),
     h('div',{style:{flex:1,overflow:'auto',padding:'0 12px 12px'}},
+      tab==='snapshot'&&h(SnapshotView,{game,roster}),
       tab==='box'&&h('div',{style:{overflowX:'auto'}},h(BoxScoreTable,{game,roster})),
       tab==='shots'&&h('div',null,
         h('div',{className:'court-container',style:{maxHeight:400}},
