@@ -51,13 +51,19 @@ h2{font-size:20px;font-weight:700;margin-bottom:16px}
 .quarter-pills{display:flex;gap:4px}
 .quarter-pills button{padding:6px 12px;border-radius:6px;font-size:12px;font-weight:700;background:var(--card2);color:var(--text2);border:1px solid var(--border)}
 .quarter-pills button.active{background:var(--blue);color:#fff;border-color:var(--blue)}
-.player-chips{display:flex;gap:6px;padding:10px 16px;overflow-x:auto;flex-shrink:0;border-bottom:1px solid var(--border);background:var(--bg)}
-.player-chip{padding:8px 14px;border-radius:20px;font-size:13px;font-weight:600;white-space:nowrap;background:var(--card2);color:var(--text2);border:2px solid transparent;flex-shrink:0}
+.player-chips{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:8px 12px;flex-shrink:0;border-bottom:1px solid var(--border);background:var(--bg)}
+.player-chip{padding:6px 10px;border-radius:16px;font-size:12px;font-weight:600;white-space:nowrap;background:var(--card2);color:var(--text2);border:2px solid transparent;text-align:center;cursor:grab;user-select:none;touch-action:none}
 .player-chip.selected{background:rgba(65,105,225,.2);color:var(--blue);border-color:var(--blue)}
-.player-chip .chip-num{font-weight:800;margin-right:4px}
+.player-chip .chip-num{font-weight:800;margin-right:3px}
+.player-chip.dragging{opacity:.4;border-style:dashed}
+.player-chip.drag-over{border-color:var(--blue);background:rgba(65,105,225,.1)}
 .live-area{flex:1;display:flex;flex-direction:column;overflow:hidden}
-.court-container{flex:1;display:flex;align-items:center;justify-content:center;padding:8px;min-height:0;position:relative}
+.court-container{flex:1;display:flex;align-items:center;justify-content:center;padding:8px;min-height:0;position:relative;overflow:hidden}
 .court-container svg{width:100%;height:100%;max-height:400px}
+.court-container.flipped svg{transform:scaleX(-1)}
+.flip-toggle{position:absolute;top:8px;right:8px;z-index:10;padding:4px 10px;border-radius:8px;font-size:11px;font-weight:700;background:rgba(65,105,225,.15);color:var(--blue);border:1px solid var(--blue);cursor:pointer}
+.flip-toggle:active{background:var(--blue);color:#fff}
+.player-info-line{text-align:center;padding:4px 12px;font-size:12px;color:var(--text2);flex-shrink:0;background:var(--bg)}
 .stat-bar{padding:8px 12px;background:var(--card);border-top:1px solid var(--border);flex-shrink:0}
 .stat-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 4px;border-radius:8px;background:var(--card2);color:var(--text);font-size:11px;font-weight:700;border:1px solid var(--border);min-height:52px;position:relative}
 .stat-btn .count{font-size:18px;font-weight:800;color:var(--blue);line-height:1}
@@ -81,17 +87,19 @@ h2{font-size:20px;font-weight:700;margin-bottom:16px}
 .hustle-row{padding:10px 12px;background:var(--card2);border-radius:8px;margin-bottom:6px}
 .hustle-tag{display:inline-block;padding:2px 8px;border-radius:4px;background:rgba(65,105,225,.2);color:var(--blue);font-size:11px;font-weight:600;margin-right:6px}
 .snap-periods{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px}
-.snap-pill{padding:6px 12px;border-radius:16px;font-size:12px;font-weight:600;background:var(--card2);color:var(--text2);border:1px solid var(--border);cursor:pointer}
+.snap-pill{padding:8px 14px;border-radius:16px;font-size:13px;font-weight:600;background:var(--card2);color:var(--text2);border:1px solid var(--border);cursor:pointer}
 .snap-pill.active{background:var(--blue);color:#fff;border-color:var(--blue)}
-.snap-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.snap-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px}
-.snap-card-title{font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
-.snap-big{font-size:32px;font-weight:800;color:var(--blue);line-height:1}
-.snap-sub{font-size:12px;color:var(--text2);margin-top:2px}
-.snap-row{display:flex;gap:12px;margin-top:6px}
-.snap-split{flex:1;text-align:center;font-size:13px}
-.snap-split-label{display:block;font-size:9px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
-.snap-leader-row{display:flex;justify-content:space-between;font-size:12px;padding:3px 0;border-bottom:1px solid var(--border)}
+.snap-grid{display:grid;grid-template-columns:1fr;gap:10px}
+.snap-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px}
+.snap-card-title{font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+.snap-big{font-size:44px;font-weight:800;color:var(--blue);line-height:1}
+.snap-sub{font-size:14px;color:var(--text2);margin-top:4px}
+.snap-row{display:flex;gap:16px;margin-top:8px}
+.snap-split{flex:1;text-align:center;font-size:16px}
+.snap-split-label{display:block;font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+.snap-leader-row{display:flex;justify-content:space-between;font-size:14px;padding:4px 0;border-bottom:1px solid var(--border)}
+.snap-standalone .snap-grid{grid-template-columns:1fr 1fr}
+.snap-standalone .snap-card{padding:20px}
 .compelling-stat{text-align:center;padding:24px;background:rgba(65,105,225,.1);border:2px solid var(--blue);border-radius:12px;font-size:20px;font-weight:700}
 .season-table{width:100%;border-collapse:collapse;font-size:11px;overflow-x:auto;display:block}
 .season-table th{padding:8px 4px;text-align:center;font-weight:700;color:var(--text2);border-bottom:2px solid var(--blue);font-size:9px;text-transform:uppercase;white-space:nowrap;position:sticky;top:0;background:var(--card)}
@@ -136,7 +144,7 @@ h2{font-size:20px;font-weight:700;margin-bottom:16px}
   h2{font-size:17px;margin-bottom:12px}.btn{padding:10px 16px;font-size:14px}.btn-sm{padding:7px 11px;font-size:12px}.btn-lg{padding:14px 20px;font-size:16px}
   .game-bar{padding:8px 12px}.score-display{font-size:22px;letter-spacing:1px}.score-display .vs-label{font-size:10px;margin:0 6px}
   .quarter-pills button{padding:5px 9px;font-size:11px}
-  .player-chips{gap:4px;padding:8px 10px}.player-chip{padding:6px 10px;font-size:11px;border-width:1.5px}.player-chip .chip-num{margin-right:2px}
+  .player-chips{gap:3px;padding:6px 8px}.player-chip{padding:5px 8px;font-size:10px;border-width:1.5px;border-radius:12px}.player-chip .chip-num{margin-right:2px}
   .court-container{padding:4px}.court-container svg{max-height:240px}
   .stat-bar{padding:6px 8px}.stat-btn{padding:6px 2px;font-size:9px;min-height:44px;border-radius:6px}.stat-btn .count{font-size:15px}.stat-btn.hustle{font-size:11px}.stat-btn.undo{font-size:11px}
   .shot-popup button{padding:16px 20px;font-size:14px;min-width:70px;border-radius:12px}.shot-popup{gap:12px}
@@ -151,7 +159,7 @@ h2{font-size:20px;font-weight:700;margin-bottom:16px}
 }
 @media(max-width:375px){
   .logo{font-size:13px}.nav button{padding:7px 8px;font-size:10px}.score-display{font-size:20px}
-  .quarter-pills button{padding:4px 7px;font-size:10px}.player-chip{padding:5px 8px;font-size:10px}
+  .quarter-pills button{padding:4px 7px;font-size:10px}.player-chip{padding:4px 6px;font-size:9px}
   .court-container svg{max-height:200px}.stat-btn{min-height:40px;font-size:8px}.stat-btn .count{font-size:13px}.grid4{gap:4px}
 }
 @media(min-width:1024px){
@@ -253,7 +261,7 @@ const BASKET_X=250,BASKET_Y=52.5,THREE_R=221.5,CORNER_X=33;
 function is3pt(x,y){if(x<CORNER_X||x>500-CORNER_X)return true;const dx=x-BASKET_X,dy=y-BASKET_Y;return Math.sqrt(dx*dx+dy*dy)>THREE_R}
 
 // === HALF COURT SVG ===
-function HalfCourt({shots=[],onTap,selectedPid,readOnly}){
+function HalfCourt({shots=[],onTap,selectedPid,readOnly,flipped}){
   const svgRef=useRef(null);
   const [popup,setPopup]=useState(null);
   const handlePointerDown=useCallback(e=>{
@@ -262,9 +270,12 @@ function HalfCourt({shots=[],onTap,selectedPid,readOnly}){
     const svg=svgRef.current,pt=svg.createSVGPoint();
     pt.x=e.clientX;pt.y=e.clientY;
     const sp=pt.matrixTransform(svg.getScreenCTM().inverse());
-    if(sp.x<5||sp.x>495||sp.y<5||sp.y>415)return;
-    setPopup({x:sp.x,y:sp.y});
-  },[selectedPid,readOnly]);
+    // If flipped, un-mirror the x coordinate so shots store in canonical orientation
+    const rx=flipped?500-sp.x:sp.x;
+    const ry=sp.y;
+    if(rx<5||rx>495||ry<5||ry>415)return;
+    setPopup({x:rx,y:ry});
+  },[selectedPid,readOnly,flipped]);
   const handleResult=made=>{if(!popup)return;
     onTap({x:popup.x,y:popup.y,made,is3:is3pt(popup.x,popup.y),pid:selectedPid,id:uid(),ts:Date.now()});
     setPopup(null)};
@@ -360,13 +371,50 @@ function OppScoreModal({game,gameId,onClose}){
       h('button',{className:'btn btn-blue',style:{width:'100%'},onClick:onClose},'Done')));
 }
 
-// === PLAYER CHIPS (shared) ===
-function PlayerChips({game,roster,selPid,setSelPid,showStat}){
+// === PLAYER CHIPS (shared, 2-col grid with drag reorder) ===
+function PlayerChips({game,roster,selPid,setSelPid,showStat,gameId}){
+  const defaultOrder=toArr(game.activePlayers);
+  const storageKey=gameId?'stormray_order_'+gameId:'';
+  const [order,setOrder]=useState(()=>{
+    if(!storageKey)return defaultOrder;
+    try{const s=localStorage.getItem(storageKey);if(s){const parsed=JSON.parse(s);
+      const valid=parsed.filter(id=>defaultOrder.includes(id));
+      defaultOrder.forEach(id=>{if(!valid.includes(id))valid.push(id)});
+      return valid}}catch(e){}return defaultOrder});
+  const [dragId,setDragId]=useState(null);
+  const [overId,setOverId]=useState(null);
+  const touchRef=useRef({startY:0,el:null,pid:null});
+
+  const saveOrder=newOrder=>{setOrder(newOrder);if(storageKey)try{localStorage.setItem(storageKey,JSON.stringify(newOrder))}catch(e){}};
+  const swap=(fromPid,toPid)=>{if(fromPid===toPid)return;
+    const a=[...order],fi=a.indexOf(fromPid),ti=a.indexOf(toPid);
+    if(fi<0||ti<0)return;a.splice(fi,1);a.splice(ti,0,fromPid);saveOrder(a)};
+
+  // Desktop drag
+  const onDragStart=(e,pid)=>{setDragId(pid);e.dataTransfer.effectAllowed='move'};
+  const onDragOver=(e,pid)=>{e.preventDefault();setOverId(pid)};
+  const onDragEnd=()=>{if(dragId&&overId)swap(dragId,overId);setDragId(null);setOverId(null)};
+
+  // Touch drag
+  const onTouchStart=(e,pid)=>{const t=e.touches[0];touchRef.current={startY:t.clientY,startX:t.clientX,pid,moved:false}};
+  const onTouchMove=(e,pid)=>{const t=e.touches[0];const dx=Math.abs(t.clientX-touchRef.current.startX);
+    const dy=Math.abs(t.clientY-touchRef.current.startY);if(dx>8||dy>8)touchRef.current.moved=true;
+    const el=document.elementFromPoint(t.clientX,t.clientY);
+    if(el){const chip=el.closest('.player-chip');if(chip&&chip.dataset.pid)setOverId(chip.dataset.pid)}};
+  const onTouchEnd=e=>{const ref=touchRef.current;
+    if(ref.moved&&ref.pid&&overId){swap(ref.pid,overId)}
+    else if(!ref.moved&&ref.pid){setSelPid(ref.pid)}
+    setOverId(null);touchRef.current={startY:0,pid:null,moved:false}};
+
   return h('div',{className:'player-chips'},
-    toArr(game.activePlayers).map(pid=>{
+    order.map(pid=>{
       const p=roster.find(r=>r.id===pid);if(!p)return null;
       const ps=calcPlayerStats(game,pid);
-      return h('div',{key:pid,className:`player-chip ${selPid===pid?'selected':''}`,onClick:()=>setSelPid(pid)},
+      return h('div',{key:pid,'data-pid':pid,draggable:true,
+        className:`player-chip ${selPid===pid?'selected':''} ${dragId===pid?'dragging':''} ${overId===pid?'drag-over':''}`,
+        onClick:()=>setSelPid(pid),
+        onDragStart:e=>onDragStart(e,pid),onDragOver:e=>onDragOver(e,pid),onDragEnd,
+        onTouchStart:e=>onTouchStart(e,pid),onTouchMove:e=>onTouchMove(e,pid),onTouchEnd},
         h('span',{className:'chip-num'},`#${p.number}`),
         `${p.name.split(' ')[0]} `,
         h('span',{style:{color:'var(--blue)',fontWeight:800}},showStat?showStat(ps):ps.pts))}));
@@ -378,6 +426,8 @@ function OffenseView({game,gameId,roster,onEnd}){
   const [showBox,setShowBox]=useState(false);
   const [showOpp,setShowOpp]=useState(false);
   const [undoStack,setUndoStack]=useState([]);
+  const [flipped,setFlipped]=useState(()=>{try{return localStorage.getItem('stormray_flip')==='1'}catch(e){return false}});
+  const toggleFlip=()=>{const nv=!flipped;setFlipped(nv);try{localStorage.setItem('stormray_flip',nv?'1':'0')}catch(e){}};
   const teamStats=calcTeamStats(game);
   const pStats=selPid?calcPlayerStats(game,selPid):{};
   const selPlayer=roster.find(p=>p.id===selPid);
@@ -405,9 +455,11 @@ function OffenseView({game,gameId,roster,onEnd}){
 
   return h('div',{className:'app',style:{height:'100%',display:'flex',flexDirection:'column'}},
     h(GameBar,{game,gameId,teamPts:teamStats.pts,role:'offense',showOppScore:true,setShowOppScore:setShowOpp}),
-    h(PlayerChips,{game,roster,selPid,setSelPid,showStat:ps=>ps.pts}),
-    h('div',{className:'court-container'},h(HalfCourt,{shots:playerShots,onTap:addShot,selectedPid:selPid})),
-    selPlayer&&h('div',{style:{textAlign:'center',padding:'4px 0',fontSize:12,color:'var(--text2)'}},
+    h(PlayerChips,{game,roster,selPid,setSelPid,showStat:ps=>ps.pts,gameId}),
+    h('div',{className:`court-container${flipped?' flipped':''}`},
+      h('button',{className:'flip-toggle',onClick:toggleFlip},flipped?'⟲ Flip Back':'⟳ Flip Court'),
+      h(HalfCourt,{shots:playerShots,onTap:addShot,selectedPid:selPid,flipped})),
+    selPlayer&&h('div',{className:'player-info-line'},
       `#${selPlayer.number} ${selPlayer.name}`,
       h('span',{style:{color:'var(--blue)',fontWeight:700,marginLeft:8}},`${pStats.pts}pts ${pStats.ast}ast ${pStats.to}to`)),
     h('div',{className:'stat-bar'},
@@ -420,6 +472,7 @@ function OffenseView({game,gameId,roster,onEnd}){
       h('div',{className:'grid4'},
         h('button',{className:'stat-btn undo',onClick:undo},'↩ UNDO')),
       h('div',{style:{display:'flex',gap:6,marginTop:6}},
+        h('button',{className:'btn btn-dark btn-sm',style:{flex:1},onClick:()=>setShowOpp(true)},'🏀 Opp Score'),
         h('button',{className:'btn btn-dark btn-sm',style:{flex:1},onClick:()=>setShowBox(true)},'📊 Box Score'),
         h('button',{className:'btn btn-danger btn-sm',style:{flex:1},onClick:endGame},'🏁 End Game'))),
     showBox&&h('div',{className:'modal-overlay',onClick:()=>setShowBox(false)},
@@ -461,7 +514,7 @@ function DefenseView({game,gameId,roster,onEnd}){
 
   return h('div',{className:'app',style:{height:'100%',display:'flex',flexDirection:'column'}},
     h(GameBar,{game,gameId,teamPts:teamStats.pts,role:'defense'}),
-    h(PlayerChips,{game,roster,selPid,setSelPid,showStat:ps=>`${ps.reb}r ${ps.stl}s`}),
+    h(PlayerChips,{game,roster,selPid,setSelPid,showStat:ps=>`${ps.reb}r ${ps.stl}s`,gameId}),
 
     // Defense gets a larger stat area instead of court
     h('div',{style:{flex:1,display:'flex',alignItems:'center',justifyContent:'center',padding:16}},
@@ -493,7 +546,7 @@ function DefenseView({game,gameId,roster,onEnd}){
 }
 
 // === SNAPSHOT VIEW ===
-function SnapshotView({game,roster}){
+function SnapshotView({game,roster,standalone}){
   const [period,setPeriod]=useState('full');
   const periods=[{k:'q1',l:'Q1',qs:[1]},{k:'q2',l:'Q2',qs:[2]},{k:'1h',l:'1st Half',qs:[1,2]},
     {k:'q3',l:'Q3',qs:[3]},{k:'q4',l:'Q4',qs:[4]},{k:'2h',l:'2nd Half',qs:[3,4]},{k:'full',l:'Full Game',qs:[1,2,3,4,5]}];
@@ -544,7 +597,7 @@ function SnapshotView({game,roster}){
   const pct=(n,d)=>d>0?((n/d)*100).toFixed(1)+'%':'—';
   const card=(title,children)=>h('div',{className:'snap-card'},h('div',{className:'snap-card-title'},title),children);
 
-  return h('div',null,
+  return h('div',{className:standalone?'snap-standalone':''},
     h('div',{className:'snap-periods'},
       periods.map(p=>h('button',{key:p.k,className:'snap-pill'+(period===p.k?' active':''),onClick:()=>setPeriod(p.k)},p.l))),
     h('div',{className:'snap-grid'},
@@ -949,6 +1002,10 @@ function App(){
   const activeGame=activeGameId?games[activeGameId]:null;
   const isLive=screen==='live'&&activeGame;
 
+  // Find any active game for standalone snapshot
+  const anyActiveGame=activeGame||activeGames[0]||null;
+  const anyActiveGameId=activeGameId||(activeGames[0]?.id)||null;
+
   const screens={
     roster:()=>h(RosterScreen,{roster,setRoster}),
     newgame:()=>h(GameSetupScreen,{roster,onStart:startGame}),
@@ -958,6 +1015,11 @@ function App(){
       if(role==='defense')return h(DefenseView,{game:activeGame,gameId:activeGameId,roster,onEnd:endGame});
       if(role==='coach')return h(CoachView,{game:activeGame,gameId:activeGameId,roster,onEnd:endGame});
       return h(RolePicker,{game:activeGame,gameId:activeGameId,onPick:pickRole})},
+    snapshot:()=>{const g=anyActiveGame;if(!g)return h('div',{className:'empty'},'No active game — start one to see the snapshot');
+      return h('div',{className:'app',style:{height:'100%',display:'flex',flexDirection:'column'}},
+        h(GameBar,{game:g,gameId:anyActiveGameId,teamPts:calcTeamStats(g).pts,role:'coach'}),
+        h('div',{style:{flex:1,overflow:'auto',padding:'12px'}},
+          h(SnapshotView,{game:g,roster,standalone:true})))},
     report:()=>h(PostGameReport,{gameId:reportGameId,games,roster}),
     history:()=>h(GameHistoryScreen,{roster,games,onViewReport:viewReport}),
     season:()=>h(SeasonStatsScreen,{roster,games}),
@@ -974,16 +1036,18 @@ function App(){
         isLive&&h('button',{className:'btn btn-dark btn-sm',onClick:leaveGame},'Leave'),
         activeGameId&&!isLive&&h('button',{className:'btn btn-blue btn-sm',onClick:()=>setScreen('live')},'◉ Live'))),
     !isLive&&h('div',{className:'nav'},
-      [{k:'roster',l:'Roster'},{k:'newgame',l:'New Game'},{k:'history',l:'Games'},{k:'season',l:'Season'},{k:'leaderboard',l:'Leaders'},{k:'report',l:'Report'}]
+      [{k:'roster',l:'Roster'},{k:'newgame',l:'New Game'},{k:'history',l:'Games'},
+        ...(activeGames.length>0?[{k:'snapshot',l:'📊 Snapshot'}]:[]),
+        {k:'season',l:'Season'},{k:'leaderboard',l:'Leaders'},{k:'report',l:'Report'}]
         .map(n=>h('button',{key:n.k,className:screen===n.k?'active':'',onClick:()=>setScreen(n.k)},n.l))),
     // Live game banner on non-live screens
-    !isLive&&screen!=='pickrole'&&activeGames.length>0&&!activeGameId&&h('div',{style:{padding:'8px 16px'}},
+    !isLive&&screen!=='pickrole'&&screen!=='snapshot'&&activeGames.length>0&&!activeGameId&&h('div',{style:{padding:'8px 16px'}},
       activeGames.map(g=>h('div',{key:g.id,className:'live-banner',onClick:()=>{setActiveGameId(g.id);setScreen('pickrole')}},
         h('div',{style:{display:'flex',alignItems:'center',gap:10}},
           h('div',{className:'pulse-dot'}),
           h('div',null,h('div',{style:{fontWeight:700}},`vs ${g.opponent}`),h('div',{style:{fontSize:12,color:'var(--text2)'}},'Game in progress'))),
         h('span',{className:'btn btn-blue btn-sm'},'Join')))),
-    isLive?screens.live():h('div',{className:'screen'},screens[screen]?.()));
+    isLive?screens.live():screen==='snapshot'&&anyActiveGame?screens.snapshot():h('div',{className:'screen'},screens[screen]?.()));
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(h(App));
