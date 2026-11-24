@@ -5,24 +5,27 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Stormray Stats</title>
-<meta name="apple-mobile-web-app-title" content="Stormray">
-<meta name="theme-color" content="#0a0a0a">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+<title>Shorewood Hoops</title>
+<meta name="apple-mobile-web-app-title" content="SW Hoops">
+<meta name="theme-color" content="#0A0A0A">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏀</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;500;600;700;800&family=Bebas+Neue&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-:root{--bg:#0a0a0a;--card:#141414;--card2:#1c1c1c;--border:#2a2a2a;--text:#fff;--text2:#999;--blue:#4169E1;--blue2:#5a7fe8;--green:#22c55e;--red:#ef4444;--orange:#f59e0b;--safe-top:env(safe-area-inset-top);--safe-bottom:env(safe-area-inset-bottom);--safe-left:env(safe-area-inset-left);--safe-right:env(safe-area-inset-right)}
+:root{--bg:#0A0A0A;--card:#141414;--card2:#1c1c1c;--border:#242424;--text:#FFFFFF;--text2:#8A8A8A;--blue:#004F9E;--blue2:#0A5CB0;--blue-press:#003C78;--blue-ghost:#0E2238;--green:#22c55e;--red:#ef4444;--orange:#f59e0b;--dim:#6E6E6E;--soft:#B6B6B6;--faint:#3A3A3A;--safe-top:env(safe-area-inset-top);--safe-bottom:env(safe-area-inset-bottom);--safe-left:env(safe-area-inset-left);--safe-right:env(safe-area-inset-right)}
 html,body{height:100%;overflow:hidden}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);padding-top:var(--safe-top);padding-bottom:var(--safe-bottom);padding-left:var(--safe-left);padding-right:var(--safe-right)}
+body{font-family:'Archivo',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);padding-top:var(--safe-top);padding-bottom:var(--safe-bottom);padding-left:var(--safe-left);padding-right:var(--safe-right);font-size:17px}
 button{font-family:inherit;cursor:pointer;border:none;outline:none;-webkit-appearance:none}
 input,textarea{font-family:inherit;outline:none;border:none;background:var(--card2);color:var(--text);border-radius:8px;padding:10px 14px;font-size:15px}
 input::placeholder,textarea::placeholder{color:var(--text2)}
 .app{height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
 .header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--card);border-bottom:1px solid var(--border);flex-shrink:0}
-.logo{font-size:18px;font-weight:800;letter-spacing:2px;text-transform:uppercase;display:flex;align-items:center;gap:8px}
-.logo .bolt{color:var(--blue);font-size:22px}
+.logo{font-family:'Anton',sans-serif;font-size:20px;font-weight:400;letter-spacing:0.14em;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.logo .mark{color:var(--blue);font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:0.02em;border:2px solid var(--blue);border-radius:4px;padding:1px 5px;line-height:1}
 .nav{display:flex;gap:4px;flex-shrink:0;padding:0 8px;border-bottom:1px solid var(--border);background:var(--card);overflow-x:auto}
-.nav button{padding:10px 16px;background:none;color:var(--text2);font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid transparent;white-space:nowrap}
+.nav button{padding:10px 16px;background:none;color:var(--text2);font-family:'Archivo',sans-serif;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.22em;border-bottom:2px solid transparent;white-space:nowrap}
 .nav button.active{color:var(--blue);border-bottom-color:var(--blue)}
 .screen{flex:1;overflow-y:auto;padding:16px;-webkit-overflow-scrolling:touch}
 .btn{display:inline-flex;align-items:center;justify-content:center;padding:12px 20px;border-radius:10px;font-size:15px;font-weight:600;transition:all .15s}
@@ -35,74 +38,54 @@ input::placeholder,textarea::placeholder{color:var(--text2)}
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:100;padding:16px}
 .modal{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;width:100%;max-width:400px;max-height:90vh;overflow-y:auto}
 .modal h3{font-size:18px;margin-bottom:16px}
-h2{font-size:20px;font-weight:700;margin-bottom:16px}
+h2{font-family:'Anton',sans-serif;font-size:22px;font-weight:400;letter-spacing:-0.01em;margin-bottom:16px}
 .empty{text-align:center;padding:40px 20px;color:var(--text2)}
-.badge{display:inline-block;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;text-transform:uppercase}
+.badge{display:inline-block;padding:3px 8px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.14em}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
 .grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px}
 .player-card{display:flex;align-items:center;gap:12px;padding:12px;background:var(--card);border:1px solid var(--border);border-radius:10px;margin-bottom:8px}
-.player-number{width:40px;height:40px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;flex-shrink:0}
+.player-number{width:40px;height:40px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-weight:400;font-size:18px;flex-shrink:0}
 .player-info{flex:1}.player-name{font-weight:600;font-size:15px}.player-pos{font-size:12px;color:var(--text2)}
 .player-actions{display:flex;gap:6px}
 .game-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--card);border-bottom:1px solid var(--border);flex-shrink:0}
-.score-display{font-size:28px;font-weight:800;letter-spacing:2px}
+.score-display{font-family:'Bebas Neue',sans-serif;font-size:32px;font-weight:400;letter-spacing:0.04em}
 .score-display .vs-label{font-size:12px;color:var(--text2);font-weight:400;margin:0 8px}
 .quarter-pills{display:flex;gap:4px}
 .quarter-pills button{padding:6px 12px;border-radius:6px;font-size:12px;font-weight:700;background:var(--card2);color:var(--text2);border:1px solid var(--border)}
 .quarter-pills button.active{background:var(--blue);color:#fff;border-color:var(--blue)}
 .player-chips{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:8px 12px;flex-shrink:0;border-bottom:1px solid var(--border);background:var(--bg)}
-.player-chip{padding:6px 10px;border-radius:16px;font-size:12px;font-weight:600;white-space:nowrap;background:var(--card2);color:var(--text2);border:2px solid transparent;text-align:center;cursor:grab;user-select:none;touch-action:none}
-.player-chip.selected{background:rgba(65,105,225,.2);color:var(--blue);border-color:var(--blue)}
-.player-chip .chip-num{font-weight:800;margin-right:3px}
-.player-chip.dragging{opacity:.4;border-style:dashed}
-.player-chip.drag-over{border-color:var(--blue);background:rgba(65,105,225,.1)}
+.player-chip{padding:6px 10px;border-radius:6px;font-family:'Archivo',sans-serif;font-size:12px;font-weight:600;white-space:nowrap;background:var(--card2);color:var(--text2);border:2px solid transparent;text-align:center;cursor:pointer;user-select:none;touch-action:none}
+.player-chip.selected{background:var(--blue-ghost);color:var(--blue2);border-color:var(--blue)}
+.player-chip .chip-num{font-weight:800;margin-right:4px}
 .live-area{flex:1;display:flex;flex-direction:column;overflow:hidden}
 .court-container{flex:1;display:flex;align-items:center;justify-content:center;padding:8px;min-height:0;position:relative;overflow:hidden}
 .court-container svg{width:100%;height:100%;max-height:400px}
-.court-container.flipped svg{transform:scaleY(-1)}
-.flip-toggle{position:absolute;top:8px;right:8px;z-index:10;padding:4px 10px;border-radius:8px;font-size:11px;font-weight:700;background:rgba(65,105,225,.15);color:var(--blue);border:1px solid var(--blue);cursor:pointer}
-.flip-toggle:active{background:var(--blue);color:#fff}
-.player-info-line{text-align:center;padding:4px 12px;font-size:12px;color:var(--text2);flex-shrink:0;background:var(--bg)}
 .stat-bar{padding:8px 12px;background:var(--card);border-top:1px solid var(--border);flex-shrink:0}
-.stat-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 4px;border-radius:8px;background:var(--card2);color:var(--text);font-size:11px;font-weight:700;border:1px solid var(--border);min-height:52px;position:relative}
-.stat-btn .count{font-size:18px;font-weight:800;color:var(--blue);line-height:1}
+.stat-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 4px;border-radius:6px;background:var(--card2);color:var(--text);font-family:'Archivo',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.14em;border:1px solid var(--border);min-height:52px;position:relative}
+.stat-btn .count{font-family:'Bebas Neue',sans-serif;font-size:22px;font-weight:400;color:var(--blue);line-height:1}
 .stat-btn:active{background:var(--blue);border-color:var(--blue)}
-.stat-btn.hustle{background:rgba(65,105,225,.15);border-color:var(--blue);color:var(--blue);grid-column:span 2}
+.stat-btn.hustle{background:var(--blue-ghost);border-color:var(--blue);color:var(--blue);grid-column:span 2}
 .stat-btn.undo{background:var(--card2);color:var(--orange);grid-column:span 2;flex-direction:row;gap:6px}
 .shot-popup{position:absolute;z-index:50;display:flex;gap:8px;transform:translate(-50%,-120%)}
 .shot-popup button{padding:14px 24px;border-radius:10px;font-size:15px;font-weight:700;min-width:80px}
 .shot-popup .made{background:var(--green);color:#fff}
 .shot-popup .missed{background:var(--red);color:#fff}
 .box-table{width:100%;border-collapse:collapse;font-size:12px}
-.box-table th{padding:8px 6px;text-align:center;font-weight:700;color:var(--text2);border-bottom:2px solid var(--blue);font-size:10px;text-transform:uppercase;position:sticky;top:0;background:var(--card)}
+.box-table th{padding:8px 6px;text-align:center;font-family:'Archivo',sans-serif;font-weight:700;color:var(--text2);border-bottom:2px solid var(--blue);font-size:10px;text-transform:uppercase;letter-spacing:0.14em;position:sticky;top:0;background:var(--card)}
 .box-table th:first-child{text-align:left}
 .box-table td{padding:6px;text-align:center;border-bottom:1px solid var(--border)}
 .box-table td:first-child{text-align:left;font-weight:600;white-space:nowrap}
 .box-table tr:last-child td{font-weight:700;border-top:2px solid var(--blue);border-bottom:none}
 .report-section{margin-bottom:20px}
-.report-section h3{font-size:14px;color:var(--blue);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.report-section h3{font-family:'Archivo',sans-serif;font-size:12px;color:var(--blue);text-transform:uppercase;letter-spacing:0.22em;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px}
 .leader-row{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--card2);border-radius:8px;margin-bottom:6px}
-.leader-stat{font-weight:800;font-size:20px;color:var(--blue)}
+.leader-stat{font-family:'Bebas Neue',sans-serif;font-weight:400;font-size:24px;color:var(--blue)}
 .hustle-row{padding:10px 12px;background:var(--card2);border-radius:8px;margin-bottom:6px}
-.hustle-tag{display:inline-block;padding:2px 8px;border-radius:4px;background:rgba(65,105,225,.2);color:var(--blue);font-size:11px;font-weight:600;margin-right:6px}
-.snap-periods{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px}
-.snap-pill{padding:8px 14px;border-radius:16px;font-size:13px;font-weight:600;background:var(--card2);color:var(--text2);border:1px solid var(--border);cursor:pointer}
-.snap-pill.active{background:var(--blue);color:#fff;border-color:var(--blue)}
-.snap-grid{display:grid;grid-template-columns:1fr;gap:10px}
-.snap-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px}
-.snap-card-title{font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
-.snap-big{font-size:44px;font-weight:800;color:var(--blue);line-height:1}
-.snap-sub{font-size:14px;color:var(--text2);margin-top:4px}
-.snap-row{display:flex;gap:16px;margin-top:8px}
-.snap-split{flex:1;text-align:center;font-size:16px}
-.snap-split-label{display:block;font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
-.snap-leader-row{display:flex;justify-content:space-between;font-size:14px;padding:4px 0;border-bottom:1px solid var(--border)}
-.snap-standalone .snap-grid{grid-template-columns:1fr 1fr}
-.snap-standalone .snap-card{padding:20px}
-.compelling-stat{text-align:center;padding:24px;background:rgba(65,105,225,.1);border:2px solid var(--blue);border-radius:12px;font-size:20px;font-weight:700}
+.hustle-tag{display:inline-block;padding:2px 8px;border-radius:4px;background:var(--blue-ghost);color:var(--blue);font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;margin-right:6px;letter-spacing:0.02em}
+.compelling-stat{text-align:center;padding:24px;background:var(--blue-ghost);border:2px solid var(--blue);border-radius:8px;font-family:'Archivo',sans-serif;font-size:17px;font-weight:700}
 .season-table{width:100%;border-collapse:collapse;font-size:11px;overflow-x:auto;display:block}
-.season-table th{padding:8px 4px;text-align:center;font-weight:700;color:var(--text2);border-bottom:2px solid var(--blue);font-size:9px;text-transform:uppercase;white-space:nowrap;position:sticky;top:0;background:var(--card)}
+.season-table th{padding:8px 4px;text-align:center;font-family:'Archivo',sans-serif;font-weight:700;color:var(--text2);border-bottom:2px solid var(--blue);font-size:9px;text-transform:uppercase;letter-spacing:0.14em;white-space:nowrap;position:sticky;top:0;background:var(--card)}
 .season-table th:first-child{text-align:left}
 .season-table td{padding:6px 4px;text-align:center;border-bottom:1px solid var(--border);white-space:nowrap}
 .season-table td:first-child{text-align:left;font-weight:600}
@@ -110,32 +93,41 @@ h2{font-size:20px;font-weight:700;margin-bottom:16px}
 .game-list-item:active{background:var(--card2)}
 .game-date{font-size:12px;color:var(--text2)}
 .game-opponent{font-weight:700;font-size:15px}
-.game-score{font-weight:800;font-size:18px;color:var(--blue)}
+.game-score{font-family:'Bebas Neue',sans-serif;font-weight:400;font-size:22px;color:var(--blue)}
 .tab-bar{display:flex;gap:4px;margin-bottom:16px}
 .tab-bar button{flex:1;padding:10px;border-radius:8px;font-size:13px;font-weight:600;background:var(--card2);color:var(--text2);border:1px solid var(--border)}
 .tab-bar button.active{background:var(--blue);color:#fff;border-color:var(--blue)}
 
 /* === ROLE SYSTEM === */
 .role-cards{display:grid;grid-template-columns:1fr;gap:12px;max-width:420px;margin:0 auto}
-.role-card{background:var(--card);border:2px solid var(--border);border-radius:14px;padding:24px;text-align:center;cursor:pointer;transition:all .15s}
-.role-card:active{border-color:var(--blue);background:rgba(65,105,225,.08)}
+.role-card{background:var(--card);border:2px solid var(--border);border-radius:8px;padding:24px;text-align:center;cursor:pointer;transition:all .15s}
+.role-card:active{border-color:var(--blue);background:var(--blue-ghost)}
 .role-icon{font-size:36px;margin-bottom:8px;display:block}
-.role-name{font-size:18px;font-weight:800;margin-bottom:4px}
+.role-name{font-family:'Anton',sans-serif;font-size:18px;font-weight:400;margin-bottom:4px;letter-spacing:-0.01em}
 .role-desc{font-size:13px;color:var(--text2)}
 .role-taken{display:inline-block;margin-top:8px;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;background:rgba(245,158,11,.15);color:var(--orange)}
 .conn{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text2)}
 .conn-dot{width:7px;height:7px;border-radius:50%;display:inline-block}
 .conn-on{background:var(--green)}.conn-off{background:var(--red)}
-.role-tag{padding:3px 8px;border-radius:5px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.role-tag{padding:3px 8px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.14em}
 .role-tag.offense{background:rgba(34,197,94,.15);color:var(--green)}
 .role-tag.defense{background:rgba(239,68,68,.15);color:var(--red)}
-.role-tag.coach{background:rgba(65,105,225,.15);color:var(--blue)}
-.live-banner{padding:14px 16px;background:rgba(65,105,225,.08);border:1px solid var(--blue);border-radius:10px;display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;cursor:pointer}
-.live-banner:active{background:rgba(65,105,225,.15)}
+.role-tag.coach{background:var(--blue-ghost);color:var(--blue)}
+.role-tag.both{background:rgba(245,158,11,.15);color:var(--orange)}
+.live-banner{padding:14px 16px;background:var(--blue-ghost);border:1px solid var(--blue);border-radius:8px;display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;cursor:pointer}
+.live-banner:active{background:rgba(0,79,158,.2)}
+.game-goals{margin-top:16px;padding:12px;background:var(--card);border:1px solid var(--border);border-radius:8px}
+.game-goals h4{font-family:'Archivo',sans-serif;font-size:12px;color:var(--text2);text-transform:uppercase;letter-spacing:0.22em;font-weight:700;margin-bottom:8px}
+.goal-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px}
+.goal-row:last-child{border-bottom:none}
+.goal-label{color:var(--text2);font-size:12px;flex:1}
+.goal-value{font-family:'Bebas Neue',sans-serif;font-size:18px;min-width:40px;text-align:right}
+.goal-target{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);min-width:50px;text-align:right;margin-left:8px}
+.goal-hit{color:var(--green)}.goal-miss{color:var(--red)}
 .pulse-dot{width:10px;height:10px;border-radius:50%;background:var(--green);animation:pulse 1.5s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 .coach-section{margin-bottom:20px}
-.coach-section h3{font-size:14px;color:var(--blue);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+.coach-section h3{font-family:'Archivo',sans-serif;font-size:12px;color:var(--blue);text-transform:uppercase;letter-spacing:0.22em;font-weight:700;margin-bottom:10px}
 
 /* === IPHONE RESPONSIVE === */
 @media(max-width:430px){
@@ -144,7 +136,7 @@ h2{font-size:20px;font-weight:700;margin-bottom:16px}
   h2{font-size:17px;margin-bottom:12px}.btn{padding:10px 16px;font-size:14px}.btn-sm{padding:7px 11px;font-size:12px}.btn-lg{padding:14px 20px;font-size:16px}
   .game-bar{padding:8px 12px}.score-display{font-size:22px;letter-spacing:1px}.score-display .vs-label{font-size:10px;margin:0 6px}
   .quarter-pills button{padding:5px 9px;font-size:11px}
-  .player-chips{gap:3px;padding:6px 8px}.player-chip{padding:5px 8px;font-size:10px;border-width:1.5px;border-radius:12px}.player-chip .chip-num{margin-right:2px}
+  .player-chips{gap:4px;padding:8px 10px}.player-chip{padding:6px 10px;font-size:11px;border-width:1.5px}.player-chip .chip-num{margin-right:2px}
   .court-container{padding:4px}.court-container svg{max-height:240px}
   .stat-bar{padding:6px 8px}.stat-btn{padding:6px 2px;font-size:9px;min-height:44px;border-radius:6px}.stat-btn .count{font-size:15px}.stat-btn.hustle{font-size:11px}.stat-btn.undo{font-size:11px}
   .shot-popup button{padding:16px 20px;font-size:14px;min-width:70px;border-radius:12px}.shot-popup{gap:12px}
@@ -159,7 +151,7 @@ h2{font-size:20px;font-weight:700;margin-bottom:16px}
 }
 @media(max-width:375px){
   .logo{font-size:13px}.nav button{padding:7px 8px;font-size:10px}.score-display{font-size:20px}
-  .quarter-pills button{padding:4px 7px;font-size:10px}.player-chip{padding:4px 6px;font-size:9px}
+  .quarter-pills button{padding:4px 7px;font-size:10px}.player-chip{padding:5px 8px;font-size:10px}
   .court-container svg{max-height:200px}.stat-btn{min-height:40px;font-size:8px}.stat-btn .count{font-size:13px}.grid4{gap:4px}
 }
 @media(min-width:1024px){
@@ -193,24 +185,20 @@ firebase.initializeApp({
   messagingSenderId:"977266607962",
   appId:"1:977266607962:web:73567ce96d582ff342d563"
 });
+firebase.database().goOnline();
+try{firebase.database().ref().keepSynced&&firebase.database().ref('roster').keepSynced(true);firebase.database().ref('games').keepSynced(true)}catch(e){}
 const db = firebase.database();
 
 // Device ID — persists per browser/device
-const DEVICE_ID = localStorage.getItem('stormray_did') || (()=>{
+const DEVICE_ID = localStorage.getItem('sw_hoops_did') || localStorage.getItem('stormray_did') || (()=>{
   const id='D'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
-  localStorage.setItem('stormray_did',id);return id;
+  localStorage.setItem('sw_hoops_did',id);return id;
 })();
 
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const toArr=v=>Array.isArray(v)?v:(v?Object.values(v):[]);
 const objToArr=o=>o?Object.values(o):[];
 const HUSTLE_TAGS=['Dove for loose ball','Took a charge','Deflection','Box out','Hustle back on D','Saved possession','50/50 ball','Screen & recover'];
-
-// Opponent score helper — supports both legacy oppScore and per-quarter oppScoreByQ
-function getOppScore(game){
-  if(game.oppScoreByQ){const q=game.oppScoreByQ;return(q[1]||0)+(q[2]||0)+(q[3]||0)+(q[4]||0)+(q[5]||0)}
-  return game.oppScore||0;
-}
 
 // === STAT CALCULATIONS ===
 function calcPlayerStats(game,pid){
@@ -221,13 +209,13 @@ function calcPlayerStats(game,pid){
   const ftm=p.ftm||0,fta=(p.ftm||0)+(p.ftx||0);
   const pts=(fgm-tpm)*2+tpm*3+ftm;
   return {fgm,fga,fgp:fga?((fgm/fga)*100).toFixed(0):'-',tpm,tpa,tpp:tpa?((tpm/tpa)*100).toFixed(0):'-',
-    ftm,fta,ftx:p.ftx||0,ftp:fta?((ftm/fta)*100).toFixed(0):'-',pts,reb:p.reb||0,oreb:p.oreb||0,dreb:p.dreb||0,ast:p.ast||0,stl:p.stl||0,blk:p.blk||0,
+    ftm,fta,ftp:fta?((ftm/fta)*100).toFixed(0):'-',pts,reb:p.reb||0,ast:p.ast||0,stl:p.stl||0,blk:p.blk||0,
     to:p.to||0,foul:p.foul||0,hustle:objToArr(game.hustlePlays).filter(hp=>hp.pid===pid).length};
 }
 
 function calcTeamStats(game){
   const pids=toArr(game.activePlayers);
-  const team={fgm:0,fga:0,tpm:0,tpa:0,ftm:0,fta:0,ftx:0,pts:0,reb:0,oreb:0,dreb:0,ast:0,stl:0,blk:0,to:0,foul:0,hustle:0};
+  const team={fgm:0,fga:0,tpm:0,tpa:0,ftm:0,fta:0,pts:0,reb:0,ast:0,stl:0,blk:0,to:0,foul:0,hustle:0};
   pids.forEach(pid=>{const s=calcPlayerStats(game,pid);Object.keys(team).forEach(k=>{if(typeof s[k]==='number')team[k]+=s[k]})});
   team.fgp=team.fga?((team.fgm/team.fga)*100).toFixed(1):'-';
   team.tpp=team.tpa?((team.tpm/team.tpa)*100).toFixed(1):'-';
@@ -252,7 +240,7 @@ function getMostCompelling(game){
   if(t.to<=8&&t.fga>=20)c.push({text:`Only ${t.to} turnovers`,score:12-t.to});
   if(t.reb>=30)c.push({text:`Controlled the boards with ${t.reb} rebounds`,score:t.reb-25});
   if(t.ast&&t.to)c.push({text:`${(t.ast/t.to).toFixed(1)}:1 assist-to-turnover ratio`,score:(t.ast/t.to)-1});
-  if(t.hustle>=5)c.push({text:`${t.hustle} Stormray Hustle Plays`,score:t.hustle-3});
+  if(t.hustle>=5)c.push({text:`${t.hustle} Shorewood Hustle Plays`,score:t.hustle-3});
   c.sort((a,b)=>b.score-a.score);return c[0]?.text||`Scored ${t.pts} points as a team`;
 }
 
@@ -261,7 +249,7 @@ const BASKET_X=250,BASKET_Y=52.5,THREE_R=221.5,CORNER_X=33;
 function is3pt(x,y){if(x<CORNER_X||x>500-CORNER_X)return true;const dx=x-BASKET_X,dy=y-BASKET_Y;return Math.sqrt(dx*dx+dy*dy)>THREE_R}
 
 // === HALF COURT SVG ===
-function HalfCourt({shots=[],onTap,selectedPid,readOnly,flipped}){
+function HalfCourt({shots=[],onTap,selectedPid,readOnly}){
   const svgRef=useRef(null);
   const [popup,setPopup]=useState(null);
   const handlePointerDown=useCallback(e=>{
@@ -270,12 +258,9 @@ function HalfCourt({shots=[],onTap,selectedPid,readOnly,flipped}){
     const svg=svgRef.current,pt=svg.createSVGPoint();
     pt.x=e.clientX;pt.y=e.clientY;
     const sp=pt.matrixTransform(svg.getScreenCTM().inverse());
-    // If flipped vertically, un-mirror the y coordinate so shots store in canonical orientation
-    const rx=sp.x;
-    const ry=flipped?420-sp.y:sp.y;
-    if(rx<5||rx>495||ry<5||ry>415)return;
-    setPopup({x:rx,y:ry});
-  },[selectedPid,readOnly,flipped]);
+    if(sp.x<5||sp.x>495||sp.y<5||sp.y>415)return;
+    setPopup({x:sp.x,y:sp.y});
+  },[selectedPid,readOnly]);
   const handleResult=made=>{if(!popup)return;
     onTap({x:popup.x,y:popup.y,made,is3:is3pt(popup.x,popup.y),pid:selectedPid,id:uid(),ts:Date.now()});
     setPopup(null)};
@@ -288,11 +273,11 @@ function HalfCourt({shots=[],onTap,selectedPid,readOnly,flipped}){
       h('rect',{x:2,y:2,width:496,height:416,fill:'none',stroke:'#333',strokeWidth:2,rx:3}),
       h('line',{x1:2,y1:418,x2:498,y2:418,stroke:'#333',strokeWidth:2}),
       h('path',{d:'M 190 418 A 60 60 0 0 1 310 418',fill:'none',stroke:'#333',strokeWidth:1.5}),
-      h('rect',{x:170,y:0,width:160,height:190,fill:'rgba(65,105,225,0.06)',stroke:'#4169E1',strokeWidth:1.5,strokeOpacity:0.4}),
-      h('line',{x1:170,y1:190,x2:330,y2:190,stroke:'#4169E1',strokeWidth:1.5,strokeOpacity:0.4}),
-      h('circle',{cx:250,cy:190,r:60,fill:'none',stroke:'#4169E1',strokeWidth:1.5,strokeOpacity:0.3}),
+      h('rect',{x:170,y:0,width:160,height:190,fill:'rgba(0,79,158,0.08)',stroke:'#004F9E',strokeWidth:1.5,strokeOpacity:0.4}),
+      h('line',{x1:170,y1:190,x2:330,y2:190,stroke:'#004F9E',strokeWidth:1.5,strokeOpacity:0.4}),
+      h('circle',{cx:250,cy:190,r:60,fill:'none',stroke:'#004F9E',strokeWidth:1.5,strokeOpacity:0.3}),
       h('path',{d:'M 210 0 A 40 40 0 0 0 290 0',fill:'none',stroke:'#333',strokeWidth:1}),
-      h('path',{d:arcPath,fill:'none',stroke:'#4169E1',strokeWidth:2,strokeOpacity:0.6}),
+      h('path',{d:arcPath,fill:'none',stroke:'#004F9E',strokeWidth:2,strokeOpacity:0.6}),
       h('line',{x1:220,y1:38,x2:280,y2:38,stroke:'#666',strokeWidth:2}),
       h('circle',{cx:250,cy:BASKET_Y,r:8,fill:'none',stroke:'var(--orange)',strokeWidth:2}),
       h('line',{x1:244,y1:58,x2:250,y2:68,stroke:'#555',strokeWidth:0.8}),
@@ -314,7 +299,7 @@ function HustleModal({roster,activePlayers,selectedPid,onSave,onClose}){
   const [note,setNote]=useState('');
   return h('div',{className:'modal-overlay',onClick:onClose},
     h('div',{className:'modal',onClick:e=>e.stopPropagation()},
-      h('h3',null,'⚡ Stormray Hustle Play'),
+      h('h3',null,'⚡ Shorewood Hustle Play'),
       !selectedPid&&h('div',{style:{marginBottom:12}},
         h('label',{style:{fontSize:12,color:'var(--text2)',display:'block',marginBottom:6}},'Player'),
         h('select',{value:pid,onChange:e=>setPid(e.target.value),style:{width:'100%',padding:10,borderRadius:8,background:'var(--card2)',color:'var(--text)',border:'1px solid var(--border)',fontSize:15}},
@@ -333,101 +318,56 @@ function HustleModal({roster,activePlayers,selectedPid,onSave,onClose}){
 }
 
 // === GAME BAR (shared) ===
-function GameBar({game,gameId,teamPts,role,showOppScore,setShowOppScore}){
+function GameBar({game,gameId,teamPts,role,onSnapshot}){
   const setQ=q=>db.ref(`games/${gameId}/quarter`).set(q);
-  const opp=getOppScore(game);
+  const addOpp=n=>db.ref(`games/${gameId}/oppScore`).set(Math.max(0,(game.oppScore||0)+n));
   return h('div',{className:'game-bar'},
     h('div',null,
       h('div',{style:{fontSize:12,color:'var(--text2)',display:'flex',alignItems:'center',gap:6}},
         `vs ${game.opponent}`,
         h('span',{className:`role-tag ${role}`},role)),
-      h('div',{className:'score-display'},
+      h('div',{className:'score-display',style:{display:'flex',alignItems:'center',gap:4}},
         h('span',null,teamPts),
         h('span',{className:'vs-label'},'—'),
-        h('span',{onClick:()=>setShowOppScore&&setShowOppScore(true),style:{cursor:'pointer'}},opp))),
-    h('div',{className:'quarter-pills'},
-      [1,2,3,4].map(q=>h('button',{key:q,className:game.quarter===q?'active':'',onClick:()=>setQ(q)},`Q${q}`)),
-      h('button',{className:game.quarter===5?'active':'',onClick:()=>setQ(5)},'OT')));
+        h('button',{style:{background:'var(--card2)',color:'var(--text)',border:'1px solid var(--border)',borderRadius:4,width:24,height:24,fontSize:14,display:'flex',alignItems:'center',justifyContent:'center',padding:0},onClick:()=>addOpp(-1)},'-'),
+        h('span',{style:{minWidth:28,textAlign:'center'}},game.oppScore||0),
+        h('button',{style:{background:'var(--card2)',color:'var(--text)',border:'1px solid var(--border)',borderRadius:4,width:24,height:24,fontSize:14,display:'flex',alignItems:'center',justifyContent:'center',padding:0},onClick:()=>addOpp(1)},'+'))),
+    h('div',{style:{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:4}},
+      h('div',{className:'quarter-pills'},
+        [1,2,3,4].map(q=>h('button',{key:q,className:game.quarter===q?'active':'',onClick:()=>setQ(q)},`Q${q}`)),
+        h('button',{className:game.quarter===5?'active':'',onClick:()=>setQ(5)},'OT')),
+      onSnapshot&&h('button',{style:{background:'var(--blue-ghost)',color:'var(--blue)',border:'1px solid var(--blue)',borderRadius:4,padding:'3px 8px',fontSize:10,fontFamily:'Archivo',fontWeight:700,letterSpacing:'0.14em',textTransform:'uppercase',cursor:'pointer'},onClick:onSnapshot},'SNAPSHOT')));
 }
 
-// === OPP SCORE MODAL (by quarter) ===
+// === OPP SCORE MODAL ===
 function OppScoreModal({game,gameId,onClose}){
-  const qLabels=[{q:1,l:'Q1'},{q:2,l:'Q2'},{q:3,l:'Q3'},{q:4,l:'Q4'},{q:5,l:'OT'}];
-  const byQ=game.oppScoreByQ||{};
-  const total=getOppScore(game);
-  const setQScore=(q,val)=>db.ref(`games/${gameId}/oppScoreByQ/${q}`).set(parseInt(val)||0);
   return h('div',{className:'modal-overlay',onClick:onClose},
     h('div',{className:'modal',onClick:e=>e.stopPropagation()},
       h('h3',null,'Opponent Score'),
-      h('div',{style:{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:8,marginBottom:16}},
-        qLabels.map(({q,l})=>h('div',{key:q,style:{textAlign:'center'}},
-          h('div',{style:{fontSize:11,color:'var(--text2)',fontWeight:700,marginBottom:4}},l),
-          h('input',{type:'number',inputMode:'numeric',defaultValue:byQ[q]||0,
-            style:{width:'100%',fontSize:18,textAlign:'center',padding:8},
-            onBlur:e=>setQScore(q,e.target.value)})))),
-      h('div',{style:{textAlign:'center',fontSize:28,fontWeight:800,marginBottom:16}},
-        h('span',{style:{color:'var(--text2)',fontSize:12,fontWeight:600,display:'block',marginBottom:4}},'TOTAL'),
-        total),
+      h('input',{type:'number',inputMode:'numeric',placeholder:'Score',defaultValue:game.oppScore||0,
+        style:{width:'100%',fontSize:24,textAlign:'center',marginBottom:12},
+        onBlur:e=>db.ref(`games/${gameId}/oppScore`).set(parseInt(e.target.value)||0),autoFocus:true}),
       h('button',{className:'btn btn-blue',style:{width:'100%'},onClick:onClose},'Done')));
 }
 
-// === PLAYER CHIPS (shared, 2-col grid with drag reorder) ===
-function PlayerChips({game,roster,selPid,setSelPid,showStat,gameId}){
-  const defaultOrder=toArr(game.activePlayers);
-  const storageKey=gameId?'stormray_order_'+gameId:'';
-  const [order,setOrder]=useState(()=>{
-    if(!storageKey)return defaultOrder;
-    try{const s=localStorage.getItem(storageKey);if(s){const parsed=JSON.parse(s);
-      const valid=parsed.filter(id=>defaultOrder.includes(id));
-      defaultOrder.forEach(id=>{if(!valid.includes(id))valid.push(id)});
-      return valid}}catch(e){}return defaultOrder});
-  const [dragId,setDragId]=useState(null);
-  const [overId,setOverId]=useState(null);
-  const touchRef=useRef({startY:0,el:null,pid:null});
-
-  const saveOrder=newOrder=>{setOrder(newOrder);if(storageKey)try{localStorage.setItem(storageKey,JSON.stringify(newOrder))}catch(e){}};
-  const swap=(fromPid,toPid)=>{if(fromPid===toPid)return;
-    const a=[...order],fi=a.indexOf(fromPid),ti=a.indexOf(toPid);
-    if(fi<0||ti<0)return;a.splice(fi,1);a.splice(ti,0,fromPid);saveOrder(a)};
-
-  // Desktop drag
-  const onDragStart=(e,pid)=>{setDragId(pid);e.dataTransfer.effectAllowed='move'};
-  const onDragOver=(e,pid)=>{e.preventDefault();setOverId(pid)};
-  const onDragEnd=()=>{if(dragId&&overId)swap(dragId,overId);setDragId(null);setOverId(null)};
-
-  // Touch drag
-  const onTouchStart=(e,pid)=>{const t=e.touches[0];touchRef.current={startY:t.clientY,startX:t.clientX,pid,moved:false}};
-  const onTouchMove=(e,pid)=>{const t=e.touches[0];const dx=Math.abs(t.clientX-touchRef.current.startX);
-    const dy=Math.abs(t.clientY-touchRef.current.startY);if(dx>8||dy>8)touchRef.current.moved=true;
-    const el=document.elementFromPoint(t.clientX,t.clientY);
-    if(el){const chip=el.closest('.player-chip');if(chip&&chip.dataset.pid)setOverId(chip.dataset.pid)}};
-  const onTouchEnd=e=>{const ref=touchRef.current;
-    if(ref.moved&&ref.pid&&overId){swap(ref.pid,overId)}
-    else if(!ref.moved&&ref.pid){setSelPid(ref.pid)}
-    setOverId(null);touchRef.current={startY:0,pid:null,moved:false}};
-
+// === PLAYER CHIPS (shared) ===
+function PlayerChips({game,roster,selPid,setSelPid,showStat}){
   return h('div',{className:'player-chips'},
-    order.map(pid=>{
+    toArr(game.activePlayers).map(pid=>{
       const p=roster.find(r=>r.id===pid);if(!p)return null;
       const ps=calcPlayerStats(game,pid);
-      return h('div',{key:pid,'data-pid':pid,draggable:true,
-        className:`player-chip ${selPid===pid?'selected':''} ${dragId===pid?'dragging':''} ${overId===pid?'drag-over':''}`,
-        onClick:()=>setSelPid(pid),
-        onDragStart:e=>onDragStart(e,pid),onDragOver:e=>onDragOver(e,pid),onDragEnd,
-        onTouchStart:e=>onTouchStart(e,pid),onTouchMove:e=>onTouchMove(e,pid),onTouchEnd},
+      return h('div',{key:pid,className:`player-chip ${selPid===pid?'selected':''}`,onClick:()=>setSelPid(pid)},
         h('span',{className:'chip-num'},`#${p.number}`),
         `${p.name.split(' ')[0]} `,
         h('span',{style:{color:'var(--blue)',fontWeight:800}},showStat?showStat(ps):ps.pts))}));
 }
 
 // === OFFENSE VIEW ===
-function OffenseView({game,gameId,roster,onEnd}){
+function OffenseView({game,gameId,roster,onEnd,games}){
   const [selPid,setSelPid]=useState(toArr(game.activePlayers)[0]||'');
   const [showBox,setShowBox]=useState(false);
-  const [showOpp,setShowOpp]=useState(false);
+  const [showSnap,setShowSnap]=useState(false);
   const [undoStack,setUndoStack]=useState([]);
-  const [flipped,setFlipped]=useState(()=>{try{return localStorage.getItem('stormray_flip')==='1'}catch(e){return false}});
-  const toggleFlip=()=>{const nv=!flipped;setFlipped(nv);try{localStorage.setItem('stormray_flip',nv?'1':'0')}catch(e){}};
   const teamStats=calcTeamStats(game);
   const pStats=selPid?calcPlayerStats(game,selPid):{};
   const selPlayer=roster.find(p=>p.id===selPid);
@@ -436,30 +376,21 @@ function OffenseView({game,gameId,roster,onEnd}){
   const addShot=shot=>{shot.quarter=game.quarter;
     db.ref(`games/${gameId}/shots/${shot.id}`).set(shot);
     setUndoStack(s=>[...s,{type:'shot',id:shot.id}])};
-  const addStat=(...keys)=>{if(!selPid)return;
-    const items=keys.map(key=>{
-      const prev=game.playerStats?.[selPid]?.[key]||0;
-      db.ref(`games/${gameId}/playerStats/${selPid}/${key}`).set(prev+1);
-      const qPrev=game.statsByQ?.[game.quarter]?.[selPid]?.[key]||0;
-      db.ref(`games/${gameId}/statsByQ/${game.quarter}/${selPid}/${key}`).set(qPrev+1);
-      return {pid:selPid,key,prev,qPrev,quarter:game.quarter};
-    });
-    setUndoStack(s=>[...s,{type:'stat',items}])};
+  const addStat=key=>{if(!selPid)return;
+    const prev=game.playerStats?.[selPid]?.[key]||0;
+    db.ref(`games/${gameId}/playerStats/${selPid}/${key}`).set(prev+1);
+    setUndoStack(s=>[...s,{type:'stat',pid:selPid,key,prev}])};
   const undo=()=>{if(!undoStack.length)return;const last=undoStack[undoStack.length-1];
     if(last.type==='shot')db.ref(`games/${gameId}/shots/${last.id}`).remove();
-    else if(last.type==='stat')last.items.forEach(it=>{
-      db.ref(`games/${gameId}/playerStats/${it.pid}/${it.key}`).set(it.prev);
-      db.ref(`games/${gameId}/statsByQ/${it.quarter}/${it.pid}/${it.key}`).set(it.qPrev);});
+    else if(last.type==='stat')db.ref(`games/${gameId}/playerStats/${last.pid}/${last.key}`).set(last.prev);
     setUndoStack(s=>s.slice(0,-1))};
   const endGame=()=>{if(confirm('End this game?')){db.ref(`games/${gameId}/status`).set('completed');onEnd(gameId)}};
 
   return h('div',{className:'app',style:{height:'100%',display:'flex',flexDirection:'column'}},
-    h(GameBar,{game,gameId,teamPts:teamStats.pts,role:'offense',showOppScore:true,setShowOppScore:setShowOpp}),
-    h(PlayerChips,{game,roster,selPid,setSelPid,showStat:ps=>ps.pts,gameId}),
-    h('div',{className:`court-container${flipped?' flipped':''}`},
-      h('button',{className:'flip-toggle',onClick:toggleFlip},flipped?'↑ Basket Top':'↓ Basket Bottom'),
-      h(HalfCourt,{shots:playerShots,onTap:addShot,selectedPid:selPid,flipped})),
-    selPlayer&&h('div',{className:'player-info-line'},
+    h(GameBar,{game,gameId,teamPts:teamStats.pts,role:'offense',onSnapshot:()=>setShowSnap(true)}),
+    h(PlayerChips,{game,roster,selPid,setSelPid,showStat:ps=>ps.pts}),
+    h('div',{className:'court-container'},h(HalfCourt,{shots:playerShots,onTap:addShot,selectedPid:selPid})),
+    selPlayer&&h('div',{style:{textAlign:'center',padding:'4px 0',fontSize:12,color:'var(--text2)'}},
       `#${selPlayer.number} ${selPlayer.name}`,
       h('span',{style:{color:'var(--blue)',fontWeight:700,marginLeft:8}},`${pStats.pts}pts ${pStats.ast}ast ${pStats.to}to`)),
     h('div',{className:'stat-bar'},
@@ -470,71 +401,67 @@ function OffenseView({game,gameId,roster,onEnd}){
           return h('button',{key,className:'stat-btn',onClick:()=>addStat(key)},
             h('span',{className:'count'},count),h('span',null,labels[key]))})),
       h('div',{className:'grid4'},
+        h('button',{className:'stat-btn',onClick:()=>db.ref(`games/${gameId}/oppFta`).set((game.oppFta||0)+1)},
+          h('span',{className:'count'},game.oppFta||0),h('span',null,'OPP FTA')),
         h('button',{className:'stat-btn undo',onClick:undo},'↩ UNDO')),
       h('div',{style:{display:'flex',gap:6,marginTop:6}},
-        h('button',{className:'btn btn-dark btn-sm',style:{flex:1},onClick:()=>setShowOpp(true)},'🏀 Opp Score'),
         h('button',{className:'btn btn-dark btn-sm',style:{flex:1},onClick:()=>setShowBox(true)},'📊 Box Score'),
         h('button',{className:'btn btn-danger btn-sm',style:{flex:1},onClick:endGame},'🏁 End Game'))),
     showBox&&h('div',{className:'modal-overlay',onClick:()=>setShowBox(false)},
       h('div',{className:'modal',style:{maxWidth:700,maxHeight:'80vh',overflow:'auto'},onClick:e=>e.stopPropagation()},
         h('h3',null,'Live Box Score'),h(BoxScoreTable,{game,roster}),
         h('button',{className:'btn btn-dark',style:{marginTop:12,width:'100%'},onClick:()=>setShowBox(false)},'Close'))),
-    showOpp&&h(OppScoreModal,{game,gameId,onClose:()=>setShowOpp(false)}));
+    showSnap&&h(SnapshotModal,{game,gameId,games,roster,onClose:()=>setShowSnap(false)}));
 }
 
 // === DEFENSE VIEW ===
-function DefenseView({game,gameId,roster,onEnd}){
+function DefenseView({game,gameId,roster,onEnd,games}){
   const [selPid,setSelPid]=useState(toArr(game.activePlayers)[0]||'');
   const [showHustle,setShowHustle]=useState(false);
   const [showBox,setShowBox]=useState(false);
+  const [showSnap,setShowSnap]=useState(false);
   const [undoStack,setUndoStack]=useState([]);
   const teamStats=calcTeamStats(game);
   const pStats=selPid?calcPlayerStats(game,selPid):{};
   const selPlayer=roster.find(p=>p.id===selPid);
 
-  const addStat=(...keys)=>{if(!selPid)return;
-    const items=keys.map(key=>{
-      const prev=game.playerStats?.[selPid]?.[key]||0;
-      db.ref(`games/${gameId}/playerStats/${selPid}/${key}`).set(prev+1);
-      const qPrev=game.statsByQ?.[game.quarter]?.[selPid]?.[key]||0;
-      db.ref(`games/${gameId}/statsByQ/${game.quarter}/${selPid}/${key}`).set(qPrev+1);
-      return {pid:selPid,key,prev,qPrev,quarter:game.quarter};
-    });
-    setUndoStack(s=>[...s,{type:'stat',items}])};
+  const addStat=key=>{if(!selPid)return;
+    const prev=game.playerStats?.[selPid]?.[key]||0;
+    db.ref(`games/${gameId}/playerStats/${selPid}/${key}`).set(prev+1);
+    setUndoStack(s=>[...s,{type:'stat',pid:selPid,key,prev}])};
   const addHustle=hp=>{hp.quarter=game.quarter;
     db.ref(`games/${gameId}/hustlePlays/${hp.id}`).set(hp);
     setUndoStack(s=>[...s,{type:'hustle',id:hp.id}]);setShowHustle(false)};
   const undo=()=>{if(!undoStack.length)return;const last=undoStack[undoStack.length-1];
-    if(last.type==='stat')last.items.forEach(it=>{
-      db.ref(`games/${gameId}/playerStats/${it.pid}/${it.key}`).set(it.prev);
-      db.ref(`games/${gameId}/statsByQ/${it.quarter}/${it.pid}/${it.key}`).set(it.qPrev);});
+    if(last.type==='stat')db.ref(`games/${gameId}/playerStats/${last.pid}/${last.key}`).set(last.prev);
     else if(last.type==='hustle')db.ref(`games/${gameId}/hustlePlays/${last.id}`).remove();
     setUndoStack(s=>s.slice(0,-1))};
   const endGame=()=>{if(confirm('End this game?')){db.ref(`games/${gameId}/status`).set('completed');onEnd(gameId)}};
 
   return h('div',{className:'app',style:{height:'100%',display:'flex',flexDirection:'column'}},
-    h(GameBar,{game,gameId,teamPts:teamStats.pts,role:'defense'}),
-    h(PlayerChips,{game,roster,selPid,setSelPid,showStat:ps=>`${ps.reb}r ${ps.stl}s`,gameId}),
-
+    h(GameBar,{game,gameId,teamPts:teamStats.pts,role:'defense',onSnapshot:()=>setShowSnap(true)}),
+    h(PlayerChips,{game,roster,selPid,setSelPid,showStat:ps=>`${ps.reb}r ${ps.stl}s`}),
     // Defense gets a larger stat area instead of court
     h('div',{style:{flex:1,display:'flex',alignItems:'center',justifyContent:'center',padding:16}},
       selPlayer?h('div',{style:{textAlign:'center'}},
         h('div',{style:{fontSize:48,fontWeight:800,color:'var(--blue)',marginBottom:4}},selPlayer.number),
         h('div',{style:{fontSize:20,fontWeight:700,marginBottom:12}},selPlayer.name),
-        h('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr',gap:12,textAlign:'center'}},
-          [{k:'oreb',l:'OREB'},{k:'dreb',l:'DREB'},{k:'stl',l:'STL'},{k:'blk',l:'BLK'},{k:'foul',l:'PF'}].map(s=>
+        h('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr',gap:16,textAlign:'center'}},
+          [{k:'reb',l:'REB'},{k:'stl',l:'STL'},{k:'blk',l:'BLK'},{k:'foul',l:'PF'}].map(s=>
             h('div',{key:s.k},h('div',{style:{fontSize:28,fontWeight:800,color:'var(--blue)'}},pStats[s.k]||0),
               h('div',{style:{fontSize:11,color:'var(--text2)',fontWeight:700}},s.l))))):
         h('div',{className:'empty'},'Select a player')),
     h('div',{className:'stat-bar'},
-      h('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr',gap:4,marginBottom:6}},
-        [{key:'oreb',label:'O-REB',extra:['reb']},{key:'dreb',label:'D-REB',extra:['reb']},{key:'stl',label:'STL'},{key:'blk',label:'BLK'},{key:'foul',label:'FOUL'}].map(s=>{
-          const count=selPid&&game.playerStats?.[selPid]?game.playerStats[selPid][s.key]||0:0;
-          return h('button',{key:s.key,className:'stat-btn',onClick:()=>addStat(s.key,...(s.extra||[]))},
-            h('span',{className:'count'},count),h('span',null,s.label))})),
+      h('div',{className:'grid4',style:{marginBottom:6}},
+        ['reb','stl','blk','foul'].map(key=>{
+          const labels={reb:'REB',stl:'STL',blk:'BLK',foul:'FOUL'};
+          const count=selPid&&game.playerStats?.[selPid]?game.playerStats[selPid][key]||0:0;
+          return h('button',{key,className:'stat-btn',onClick:()=>addStat(key)},
+            h('span',{className:'count'},count),h('span',null,labels[key]))})),
       h('div',{className:'grid4'},
         h('button',{className:'stat-btn hustle',onClick:()=>setShowHustle(true)},'⚡ HUSTLE PLAY'),
         h('button',{className:'stat-btn undo',onClick:undo},'↩ UNDO')),
+      h(OrebButtons,{game,gameId}),
       h('div',{style:{display:'flex',gap:6,marginTop:6}},
         h('button',{className:'btn btn-dark btn-sm',style:{flex:1},onClick:()=>setShowBox(true)},'📊 Box Score'),
         h('button',{className:'btn btn-danger btn-sm',style:{flex:1},onClick:endGame},'🏁 End Game'))),
@@ -542,104 +469,14 @@ function DefenseView({game,gameId,roster,onEnd}){
     showBox&&h('div',{className:'modal-overlay',onClick:()=>setShowBox(false)},
       h('div',{className:'modal',style:{maxWidth:700,maxHeight:'80vh',overflow:'auto'},onClick:e=>e.stopPropagation()},
         h('h3',null,'Live Box Score'),h(BoxScoreTable,{game,roster}),
-        h('button',{className:'btn btn-dark',style:{marginTop:12,width:'100%'},onClick:()=>setShowBox(false)},'Close'))));
-}
-
-// === SNAPSHOT VIEW ===
-function SnapshotView({game,roster,standalone}){
-  const [period,setPeriod]=useState('full');
-  const periods=[{k:'q1',l:'Q1',qs:[1]},{k:'q2',l:'Q2',qs:[2]},{k:'1h',l:'1st Half',qs:[1,2]},
-    {k:'q3',l:'Q3',qs:[3]},{k:'q4',l:'Q4',qs:[4]},{k:'2h',l:'2nd Half',qs:[3,4]},{k:'full',l:'Full Game',qs:[1,2,3,4,5]}];
-  const activeQs=periods.find(p=>p.k===period)?.qs||[1,2,3,4,5];
-  const pids=toArr(game.activePlayers);
-
-  // Filter shots by period
-  const shots=objToArr(game.shots).filter(s=>activeQs.includes(s.quarter));
-  const fgm=shots.filter(s=>s.made).length,fga=shots.length;
-  const tpm=shots.filter(s=>s.made&&s.is3).length,tpa=shots.filter(s=>s.is3).length;
-  const twom=fgm-tpm,twoa=fga-tpa;
-
-  // Get stat for a player in the selected period
-  const getStat=(pid,key)=>{
-    if(period==='full')return game.playerStats?.[pid]?.[key]||0;
-    let t=0;activeQs.forEach(q=>{t+=game.statsByQ?.[q]?.[pid]?.[key]||0});return t;
-  };
-
-  // FT data
-  let totalFtm=0,totalFta=0;const ftPlayers=[];
-  pids.forEach(pid=>{const m=getStat(pid,'ftm'),x=getStat(pid,'ftx'),a=m+x;
-    totalFtm+=m;totalFta+=a;
-    if(a>0){const p=roster.find(r=>r.id===pid);ftPlayers.push({name:p?.name||'?',number:p?.number||'?',ftm:m,fta:a,pct:m/a})}});
-  const ftTop3=ftPlayers.sort((a,b)=>b.pct-a.pct).slice(0,3);
-
-  // Scoring
-  const scorers=[];
-  pids.forEach(pid=>{
-    const pShots=shots.filter(s=>s.pid===pid);
-    const pfgm=pShots.filter(s=>s.made).length,ptpm=pShots.filter(s=>s.made&&s.is3).length;
-    const pftm=getStat(pid,'ftm');
-    const pts=(pfgm-ptpm)*2+ptpm*3+pftm;
-    const p=roster.find(r=>r.id===pid);
-    scorers.push({pid,name:p?.name||'?',number:p?.number||'?',pts})});
-  scorers.sort((a,b)=>b.pts-a.pts);const topScorer=scorers[0];
-
-  // Rebounds
-  let totalReb=0,totalOreb=0,totalDreb=0;const rebounders=[];
-  pids.forEach(pid=>{const r=getStat(pid,'reb'),o=getStat(pid,'oreb'),d=getStat(pid,'dreb');
-    totalReb+=r;totalOreb+=o;totalDreb+=d;
-    const p=roster.find(rr=>rr.id===pid);
-    rebounders.push({name:p?.name||'?',number:p?.number||'?',reb:r})});
-  rebounders.sort((a,b)=>b.reb-a.reb);const topReb=rebounders[0];
-
-  // Hustle plays
-  const hustles=objToArr(game.hustlePlays).filter(hp=>activeQs.includes(hp.quarter));
-
-  const pct=(n,d)=>d>0?((n/d)*100).toFixed(1)+'%':'—';
-  const card=(title,children)=>h('div',{className:'snap-card'},h('div',{className:'snap-card-title'},title),children);
-
-  return h('div',{className:standalone?'snap-standalone':''},
-    h('div',{className:'snap-periods'},
-      periods.map(p=>h('button',{key:p.k,className:'snap-pill'+(period===p.k?' active':''),onClick:()=>setPeriod(p.k)},p.l))),
-    h('div',{className:'snap-grid'},
-      card('Field Goals',h('div',null,
-        h('div',{className:'snap-big'},pct(fgm,fga)),
-        h('div',{className:'snap-sub'},fgm,'/',fga,' FG'),
-        h('div',{className:'snap-row'},
-          h('div',{className:'snap-split'},h('span',{className:'snap-split-label'},'2PT'),h('span',null,twom,'/',twoa,' ',pct(twom,twoa))),
-          h('div',{className:'snap-split'},h('span',{className:'snap-split-label'},'3PT'),h('span',null,tpm,'/',tpa,' ',pct(tpm,tpa)))))),
-      card('Free Throws',h('div',null,
-        h('div',{className:'snap-big'},pct(totalFtm,totalFta)),
-        h('div',{className:'snap-sub'},totalFtm,'/',totalFta,' FT'),
-        ftTop3.length>0&&h('div',{style:{marginTop:8}},
-          h('div',{style:{fontSize:10,color:'var(--text2)',fontWeight:700,marginBottom:4}},'TOP SHOOTERS'),
-          ftTop3.map((f,i)=>h('div',{key:i,className:'snap-leader-row'},
-            h('span',null,'#',f.number,' ',f.name),
-            h('span',{style:{fontWeight:700}},f.ftm,'/',f.fta,' ',pct(f.ftm,f.fta))))))),
-      card('Top Scorer',topScorer?h('div',{style:{textAlign:'center'}},
-        h('div',{style:{fontSize:36,fontWeight:800,color:'var(--blue)'}},topScorer.number),
-        h('div',{style:{fontWeight:700,fontSize:15}},topScorer.name),
-        h('div',{className:'snap-big',style:{marginTop:4}},topScorer.pts),
-        h('div',{className:'snap-sub'},'points')):h('div',{className:'snap-sub'},'No shots yet')),
-      card('Rebounds',h('div',null,
-        h('div',{className:'snap-big'},totalReb),
-        h('div',{className:'snap-row',style:{marginTop:4}},
-          h('div',{className:'snap-split'},h('span',{className:'snap-split-label'},'OFF'),h('span',null,totalOreb)),
-          h('div',{className:'snap-split'},h('span',{className:'snap-split-label'},'DEF'),h('span',null,totalDreb))),
-        topReb&&topReb.reb>0&&h('div',{style:{marginTop:8,fontSize:13,color:'var(--text2)'}},
-          'Top: ',h('span',{style:{color:'var(--text)',fontWeight:700}},'#',topReb.number,' ',topReb.name,' — ',topReb.reb)))),
-      card('Hustle Plays',h('div',null,
-        h('div',{className:'snap-big'},hustles.length),
-        hustles.length>0&&h('div',{style:{marginTop:8,maxHeight:120,overflow:'auto'}},
-          hustles.sort((a,b)=>(b.ts||0)-(a.ts||0)).slice(0,6).map(hp=>{
-            const p=roster.find(r=>r.id===hp.pid);
-            return h('div',{key:hp.id,style:{fontSize:12,padding:'3px 0',color:'var(--text2)'}},
-              h('span',{style:{color:'var(--text)',fontWeight:600}},p?`#${p.number}`:'?'),' ',hp.tag)}))))));
+        h('button',{className:'btn btn-dark',style:{marginTop:12,width:'100%'},onClick:()=>setShowBox(false)},'Close'))),
+    showSnap&&h(SnapshotModal,{game,gameId,games,roster,onClose:()=>setShowSnap(false)}));
 }
 
 // === COACH VIEW ===
-function CoachView({game,gameId,roster,onEnd}){
-  const [tab,setTab]=useState('snapshot');
-  const [showOpp,setShowOpp]=useState(false);
+function CoachView({game,gameId,roster,onEnd,games}){
+  const [tab,setTab]=useState('box');
+  const [showSnap,setShowSnap]=useState(false);
   const teamStats=calcTeamStats(game);
   const allShots=objToArr(game.shots);
   const hustles=objToArr(game.hustlePlays);
@@ -647,19 +484,18 @@ function CoachView({game,gameId,roster,onEnd}){
   const setQ=q=>db.ref(`games/${gameId}/quarter`).set(q);
 
   return h('div',{className:'app',style:{height:'100%',display:'flex',flexDirection:'column'}},
-    h(GameBar,{game,gameId,teamPts:teamStats.pts,role:'coach',showOppScore:true,setShowOppScore:setShowOpp}),
+    h(GameBar,{game,gameId,teamPts:teamStats.pts,role:'coach',onSnapshot:()=>setShowSnap(true)}),
     h('div',{className:'tab-bar',style:{margin:'8px 12px'}},
-      [{k:'snapshot',l:'Snapshot'},{k:'box',l:'Box Score'},{k:'shots',l:'Shot Chart'},{k:'hustle',l:'Hustle'}].map(t=>
+      [{k:'box',l:'Box Score'},{k:'shots',l:'Shot Chart'},{k:'hustle',l:'Hustle'}].map(t=>
         h('button',{key:t.k,className:tab===t.k?'active':'',onClick:()=>setTab(t.k)},t.l))),
     h('div',{style:{flex:1,overflow:'auto',padding:'0 12px 12px'}},
-      tab==='snapshot'&&h(SnapshotView,{game,roster}),
       tab==='box'&&h('div',{style:{overflowX:'auto'}},h(BoxScoreTable,{game,roster})),
       tab==='shots'&&h('div',null,
         h('div',{className:'court-container',style:{maxHeight:400}},
           h(HalfCourt,{shots:allShots,readOnly:true})),
         h('div',{style:{display:'flex',justifyContent:'center',gap:16,padding:8,fontSize:13}},
-          h('span',{style:{color:'var(--green)'}},'⬤ Made: ',allShots.filter(s=>s.made).length),
-          h('span',{style:{color:'var(--red)'}},'⬤ Miss: ',allShots.filter(s=>!s.made).length),
+          h('span',null,'⬤',{style:{color:'var(--green)',marginRight:4}},' Made: ',allShots.filter(s=>s.made).length),
+          h('span',null,'⬤',{style:{color:'var(--red)',marginRight:4}},' Miss: ',allShots.filter(s=>!s.made).length),
           h('span',null,'FG: ',teamStats.fgp,'%'),h('span',null,'3P: ',teamStats.tpp,'%'))),
       tab==='hustle'&&h('div',null,
         hustles.length===0?h('div',{className:'empty'},'No hustle plays yet'):
@@ -671,11 +507,100 @@ function CoachView({game,gameId,roster,onEnd}){
             h('span',{className:'hustle-tag'},hp.tag),
             hp.note&&h('span',{style:{fontSize:13,color:'var(--text2)',marginLeft:4}},hp.note),
             h('span',{style:{fontSize:11,color:'var(--text2)',marginLeft:8}},hp.quarter<=4?`Q${hp.quarter}`:'OT'))}))),
+    h('div',{style:{padding:'0 12px 8px'}},h(GameGoals,{game,gameId,editable:true})),
     h('div',{style:{padding:'8px 12px',background:'var(--card)',borderTop:'1px solid var(--border)',flexShrink:0}},
-      h('div',{style:{display:'flex',gap:6}},
-        h('button',{className:'btn btn-dark btn-sm',style:{flex:1},onClick:()=>setShowOpp(true)},'Opp Score'),
-        h('button',{className:'btn btn-danger btn-sm',style:{flex:1},onClick:endGame},'🏁 End Game'))),
-    showOpp&&h(OppScoreModal,{game,gameId,onClose:()=>setShowOpp(false)}));
+      h('button',{className:'btn btn-danger btn-sm',style:{width:'100%'},onClick:endGame},'🏁 End Game')),
+    showSnap&&h(SnapshotModal,{game,gameId,games,roster,onClose:()=>setShowSnap(false)}));
+}
+
+// === BOTH VIEW (OFF + DEF) ===
+function BothView({game,gameId,roster,onEnd,games}){
+  const [selPid,setSelPid]=useState(toArr(game.activePlayers)[0]||'');
+  const [tab,setTab]=useState('off');
+  const [showBox,setShowBox]=useState(false);
+  const [showSnap,setShowSnap]=useState(false);
+  const [showHustle,setShowHustle]=useState(false);
+  const [undoStack,setUndoStack]=useState([]);
+  const teamStats=calcTeamStats(game);
+  const pStats=selPid?calcPlayerStats(game,selPid):{};
+  const selPlayer=roster.find(p=>p.id===selPid);
+  const playerShots=objToArr(game.shots).filter(s=>s.pid===selPid);
+
+  const addStat=key=>{if(!selPid)return;
+    const prev=game.playerStats?.[selPid]?.[key]||0;
+    db.ref(`games/${gameId}/playerStats/${selPid}/${key}`).set(prev+1);
+    setUndoStack(s=>[...s,{type:'stat',pid:selPid,key,prev}])};
+  const addShot=shot=>{if(!selPid)return;shot.pid=selPid;shot.quarter=game.quarter;
+    const ref=db.ref(`games/${gameId}/shots`).push();shot.id=ref.key;ref.set(shot);
+    setUndoStack(s=>[...s,{type:'shot',id:ref.key}])};
+  const addHustle=hp=>{hp.quarter=game.quarter;
+    db.ref(`games/${gameId}/hustlePlays/${hp.id}`).set(hp);
+    setUndoStack(s=>[...s,{type:'hustle',id:hp.id}]);setShowHustle(false)};
+  const undo=()=>{if(!undoStack.length)return;const last=undoStack[undoStack.length-1];
+    if(last.type==='stat')db.ref(`games/${gameId}/playerStats/${last.pid}/${last.key}`).set(last.prev);
+    else if(last.type==='shot')db.ref(`games/${gameId}/shots/${last.id}`).remove();
+    else if(last.type==='hustle')db.ref(`games/${gameId}/hustlePlays/${last.id}`).remove();
+    setUndoStack(s=>s.slice(0,-1))};
+  const endGame=()=>{if(confirm('End this game?')){db.ref(`games/${gameId}/status`).set('completed');onEnd(gameId)}};
+
+  return h('div',{className:'app',style:{height:'100%',display:'flex',flexDirection:'column'}},
+    h(GameBar,{game,gameId,teamPts:teamStats.pts,role:'both',onSnapshot:()=>setShowSnap(true)}),
+    h(PlayerChips,{game,roster,selPid,setSelPid,showStat:ps=>`${ps.pts}p ${ps.reb}r`}),
+    // Tab switcher OFF / DEF
+    h('div',{style:{display:'flex',margin:'0 12px',gap:0,borderRadius:6,overflow:'hidden',border:'1px solid var(--border)'}},
+      h('button',{style:{flex:1,padding:'6px 0',fontSize:12,fontFamily:'Archivo',fontWeight:700,letterSpacing:'0.12em',border:'none',cursor:'pointer',
+        background:tab==='off'?'var(--blue)':'var(--card)',color:tab==='off'?'#fff':'var(--text2)'},onClick:()=>setTab('off')},'OFFENSE'),
+      h('button',{style:{flex:1,padding:'6px 0',fontSize:12,fontFamily:'Archivo',fontWeight:700,letterSpacing:'0.12em',border:'none',cursor:'pointer',
+        background:tab==='def'?'var(--blue)':'var(--card)',color:tab==='def'?'#fff':'var(--text2)'},onClick:()=>setTab('def')},'DEFENSE')),
+    // Content area
+    tab==='off'?h(React.Fragment,null,
+      h('div',{className:'court-container'},h(HalfCourt,{shots:playerShots,onTap:addShot,selectedPid:selPid})),
+      selPlayer&&h('div',{style:{textAlign:'center',padding:'4px 0',fontSize:12,color:'var(--text2)'}},
+        `#${selPlayer.number} ${selPlayer.name}`,
+        h('span',{style:{color:'var(--blue)',fontWeight:700,marginLeft:8}},`${pStats.pts}pts ${pStats.ast}ast ${pStats.to}to`)),
+      h('div',{className:'stat-bar'},
+        h('div',{className:'grid4',style:{marginBottom:6}},
+          ['ftm','ftx','ast','to'].map(key=>{
+            const labels={ftm:'FT ✓',ftx:'FT ✗',ast:'AST',to:'TO'};
+            const count=selPid&&game.playerStats?.[selPid]?game.playerStats[selPid][key]||0:0;
+            return h('button',{key,className:'stat-btn',onClick:()=>addStat(key)},
+              h('span',{className:'count'},count),h('span',null,labels[key]))})),
+        h('div',{className:'grid4'},
+          h('button',{className:'stat-btn',onClick:()=>db.ref(`games/${gameId}/oppFta`).set((game.oppFta||0)+1)},
+            h('span',{className:'count'},game.oppFta||0),h('span',null,'OPP FTA')),
+          h('button',{className:'stat-btn undo',onClick:undo},'↩ UNDO'))))
+    :h(React.Fragment,null,
+      h('div',{style:{flex:1,display:'flex',alignItems:'center',justifyContent:'center',padding:16}},
+        selPlayer?h('div',{style:{textAlign:'center'}},
+          h('div',{style:{fontSize:48,fontWeight:800,color:'var(--blue)',marginBottom:4}},selPlayer.number),
+          h('div',{style:{fontSize:20,fontWeight:700,marginBottom:12}},selPlayer.name),
+          h('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr',gap:16,textAlign:'center'}},
+            [{k:'reb',l:'REB'},{k:'stl',l:'STL'},{k:'blk',l:'BLK'},{k:'foul',l:'PF'}].map(s=>
+              h('div',{key:s.k},h('div',{style:{fontSize:28,fontWeight:800,color:'var(--blue)'}},pStats[s.k]||0),
+                h('div',{style:{fontSize:11,color:'var(--text2)',fontWeight:700}},s.l))))):
+          h('div',{className:'empty'},'Select a player')),
+      h('div',{className:'stat-bar'},
+        h('div',{className:'grid4',style:{marginBottom:6}},
+          ['reb','stl','blk','foul'].map(key=>{
+            const labels={reb:'REB',stl:'STL',blk:'BLK',foul:'FOUL'};
+            const count=selPid&&game.playerStats?.[selPid]?game.playerStats[selPid][key]||0:0;
+            return h('button',{key,className:'stat-btn',onClick:()=>addStat(key)},
+              h('span',{className:'count'},count),h('span',null,labels[key]))})),
+        h('div',{className:'grid4'},
+          h('button',{className:'stat-btn hustle',onClick:()=>setShowHustle(true)},'⚡ HUSTLE PLAY'),
+          h('button',{className:'stat-btn undo',onClick:undo},'↩ UNDO')),
+        h(OrebButtons,{game,gameId}))),
+    // Bottom bar
+    h('div',{style:{display:'flex',gap:6,padding:'6px 12px',background:'var(--card)',borderTop:'1px solid var(--border)',flexShrink:0}},
+      h('button',{className:'btn btn-dark btn-sm',style:{flex:1},onClick:()=>setShowBox(true)},'📊 Box'),
+      h('button',{className:'btn btn-danger btn-sm',style:{flex:1},onClick:endGame},'🏁 End')),
+    // Modals
+    showBox&&h('div',{className:'modal-overlay',onClick:()=>setShowBox(false)},
+      h('div',{className:'modal',style:{maxWidth:700,maxHeight:'80vh',overflow:'auto'},onClick:e=>e.stopPropagation()},
+        h('h3',null,'Live Box Score'),h(BoxScoreTable,{game,roster}),
+        h('button',{className:'btn btn-dark',style:{marginTop:12,width:'100%'},onClick:()=>setShowBox(false)},'Close'))),
+    showHustle&&h(HustleModal,{roster,activePlayers:game.activePlayers,selectedPid:selPid,onClose:()=>setShowHustle(false),onSave:addHustle}),
+    showSnap&&h(SnapshotModal,{game,gameId,games,roster,onClose:()=>setShowSnap(false)}));
 }
 
 // === BOX SCORE TABLE ===
@@ -696,6 +621,103 @@ function BoxScoreTable({game,roster}){
         h('tr',null,h('td',null,'TEAM'),...cols.map(c=>h('td',{key:c.k},team[c.k]))))));
 }
 
+// === GAME GOALS ===
+const GAME_GOALS=[
+  {id:'to',label:'Turnovers',target:11,dir:'lte',unit:'',calc:g=>calcTeamStats(g).to},
+  {id:'fta',label:'FT Attempts',target:24,dir:'gte',unit:'',calc:g=>calcTeamStats(g).fta},
+  {id:'oppFta',label:'Opp FT Att',target:15,dir:'lte',unit:'',calc:g=>g.oppFta||0},
+  {id:'kills',label:'Kills',target:5,dir:'gte',unit:'',calc:g=>g.kills||0,note:'3 consec stops = 1'},
+  {id:'orebPct',label:'OREB %',target:38,dir:'gte',unit:'%',calc:g=>{const t=calcTeamStats(g);const oreb=g.teamOreb||0;const totalOreb=oreb+(g.oppDreb||0);return totalOreb?Math.round((oreb/totalOreb)*100):0}},
+  {id:'oppOreb',label:'Opp OREB',target:9,dir:'lte',unit:'',calc:g=>g.oppOreb||0},
+  {id:'energy',label:'Energy',target:1,dir:'gte',unit:'',calc:g=>g.energyRating||0,note:'Coach rates 0-3'}
+];
+function goalHit(goal,val){return goal.dir==='lte'?val<=goal.target:val>=goal.target}
+
+function GameGoals({game,gameId,editable}){
+  const goals=GAME_GOALS.map(g=>({...g,value:g.calc(game)}));
+  const setField=(field,val)=>{if(gameId)db.ref(`games/${gameId}/${field}`).set(val)};
+  return h('div',{className:'game-goals'},
+    h('h4',null,'[ GAME GOALS ]'),
+    goals.map(g=>h('div',{key:g.id,className:'goal-row'},
+      h('span',{className:'goal-label'},g.label,g.note?h('span',{style:{fontSize:10,color:'var(--dim)',marginLeft:4}},g.note):null),
+      (editable&&['oppFta','kills','oppOreb','energy'].includes(g.id))?
+        h('div',{style:{display:'flex',alignItems:'center',gap:4}},
+          h('button',{style:{width:28,height:28,borderRadius:4,background:'var(--card2)',color:'var(--text)',border:'1px solid var(--border)',fontSize:14,display:'flex',alignItems:'center',justifyContent:'center'},
+            onClick:()=>{const field=g.id==='oppFta'?'oppFta':g.id==='kills'?'kills':g.id==='oppOreb'?'oppOreb':'energyRating';
+              setField(field,Math.max(0,(game[field]||0)-1))}},'-'),
+          h('span',{className:`goal-value ${goalHit(g,g.value)?'goal-hit':'goal-miss'}`},g.value,g.unit),
+          h('button',{style:{width:28,height:28,borderRadius:4,background:'var(--card2)',color:'var(--text)',border:'1px solid var(--border)',fontSize:14,display:'flex',alignItems:'center',justifyContent:'center'},
+            onClick:()=>{const field=g.id==='oppFta'?'oppFta':g.id==='kills'?'kills':g.id==='oppOreb'?'oppOreb':'energyRating';
+              const max=g.id==='energy'?3:99;setField(field,Math.min(max,(game[field]||0)+1))}},'+'))
+        :h('span',{className:`goal-value ${goalHit(g,g.value)?'goal-hit':'goal-miss'}`},g.value,g.unit),
+      h('span',{className:'goal-target'},g.dir==='lte'?`≤${g.target}`:`≥${g.target}`))));
+}
+
+// === OREB TRACKING for goals (add to Defense stat buttons) ===
+function OrebButtons({game,gameId}){
+  const setField=(f,v)=>db.ref(`games/${gameId}/${f}`).set(v);
+  return h('div',{className:'grid4',style:{marginTop:6}},
+    h('button',{className:'stat-btn',onClick:()=>setField('teamOreb',(game.teamOreb||0)+1)},
+      h('span',{className:'count'},game.teamOreb||0),h('span',null,'OREB')),
+    h('button',{className:'stat-btn',onClick:()=>setField('oppOreb',(game.oppOreb||0)+1)},
+      h('span',{className:'count'},game.oppOreb||0),h('span',null,'OPP OREB')),
+    h('button',{className:'stat-btn',onClick:()=>setField('oppDreb',(game.oppDreb||0)+1)},
+      h('span',{className:'count'},game.oppDreb||0),h('span',null,'OPP DREB')),
+    h('button',{className:'stat-btn',onClick:()=>setField('kills',(game.kills||0)+1)},
+      h('span',{className:'count'},game.kills||0),h('span',null,'KILLS')));
+}
+
+// === SNAPSHOT MODAL ===
+function SnapshotModal({game,gameId,games,roster,onClose}){
+  const team=calcTeamStats(game);
+  const completed=Object.values(games||{}).filter(g=>g.status==='completed'&&g.id!==gameId);
+  const lastGame=completed.sort((a,b)=>(b.date||'').localeCompare(a.date||''))[0];
+  const lastTeam=lastGame?calcTeamStats(lastGame):null;
+  // Season averages
+  const seasonAvg=completed.length?{pts:0,fgp:0,tpp:0,reb:0,ast:0,stl:0,blk:0,to:0,fta:0}:null;
+  if(seasonAvg){completed.forEach(g=>{const t=calcTeamStats(g);
+    seasonAvg.pts+=t.pts;seasonAvg.fgp+=parseFloat(t.fgp);seasonAvg.tpp+=parseFloat(t.tpp);
+    seasonAvg.reb+=t.reb;seasonAvg.ast+=t.ast;seasonAvg.stl+=t.stl;seasonAvg.blk+=t.blk;seasonAvg.to+=t.to;seasonAvg.fta+=t.fta});
+    const n=completed.length;Object.keys(seasonAvg).forEach(k=>seasonAvg[k]=Math.round(seasonAvg[k]/n*10)/10)}
+  const cmp=(cur,prev,better)=>{if(prev==null)return '';const d=cur-prev;
+    const good=better==='lower'?d<=0:d>=0;return h('span',{style:{fontSize:10,color:good?'var(--green)':'var(--red)',marginLeft:4}},d>0?`+${Math.round(d*10)/10}`:`${Math.round(d*10)/10}`)};
+  const statRow=(label,cur,lastVal,avgVal,better)=>h('div',{style:{display:'flex',justifyContent:'space-between',padding:'4px 0',borderBottom:'1px solid var(--border)'}},
+    h('span',{style:{color:'var(--text2)',fontSize:12}},label),
+    h('div',{style:{display:'flex',gap:16,fontSize:13}},
+      h('span',{style:{fontWeight:700,minWidth:40,textAlign:'right'}},cur),
+      lastVal!=null?h('span',{style:{color:'var(--dim)',minWidth:60,textAlign:'right'}},lastVal,cmp(cur,lastVal,better)):h('span',{style:{minWidth:60}}),
+      avgVal!=null?h('span',{style:{color:'var(--dim)',minWidth:60,textAlign:'right'}},avgVal,cmp(cur,avgVal,better)):h('span',{style:{minWidth:60}})));
+  return h('div',{className:'modal-overlay',onClick:onClose},
+    h('div',{className:'modal',style:{maxWidth:420,maxHeight:'85vh',overflow:'auto',padding:20},onClick:e=>e.stopPropagation()},
+      h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}},
+        h('h3',{style:{margin:0,fontFamily:'Anton',fontSize:18}},'SNAPSHOT'),
+        h('button',{style:{background:'none',border:'none',color:'var(--text2)',fontSize:20,cursor:'pointer'},onClick:onClose},'✕')),
+      h('div',{style:{textAlign:'center',marginBottom:12}},
+        h('div',{style:{fontSize:11,color:'var(--text2)'}},`vs ${game.opponent} — Q${game.quarter<=4?game.quarter:'OT'}`),
+        h('div',{style:{fontSize:36,fontFamily:'Bebas Neue',letterSpacing:2}},`${team.pts} — ${game.oppScore||0}`)),
+      // Game Goals
+      h('div',{style:{marginBottom:16}},
+        h('div',{style:{fontSize:11,fontFamily:'JetBrains Mono',color:'var(--blue)',letterSpacing:'0.14em',marginBottom:6}},'GAME GOALS'),
+        GAME_GOALS.map(g=>{const val=g.calc(game);const hit=goalHit(g,val);
+          return h('div',{key:g.id,style:{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'3px 0',fontSize:12}},
+            h('span',{style:{color:'var(--text2)'}},g.label),
+            h('span',{style:{fontWeight:700,color:hit?'var(--green)':'var(--red)'}},val,g.unit,' ',g.dir==='lte'?`≤${g.target}`:`≥${g.target}`,hit?' ✓':' ✗'))})),
+      // Column headers
+      h('div',{style:{display:'flex',justifyContent:'flex-end',gap:16,fontSize:10,color:'var(--dim)',marginBottom:4,paddingRight:0}},
+        h('span',{style:{minWidth:40,textAlign:'right',fontWeight:700}},'NOW'),
+        lastTeam?h('span',{style:{minWidth:60,textAlign:'right'}},'LAST'):null,
+        seasonAvg?h('span',{style:{minWidth:60,textAlign:'right'}},'AVG'):null),
+      // Key stats comparison
+      statRow('Points',team.pts,lastTeam?.pts,seasonAvg?.pts,'higher'),
+      statRow('FG%',parseFloat(team.fgp),lastTeam?parseFloat(lastTeam.fgp):null,seasonAvg?.fgp,'higher'),
+      statRow('3P%',parseFloat(team.tpp),lastTeam?parseFloat(lastTeam.tpp):null,seasonAvg?.tpp,'higher'),
+      statRow('Rebounds',team.reb,lastTeam?.reb,seasonAvg?.reb,'higher'),
+      statRow('Assists',team.ast,lastTeam?.ast,seasonAvg?.ast,'higher'),
+      statRow('Steals',team.stl,lastTeam?.stl,seasonAvg?.stl,'higher'),
+      statRow('Turnovers',team.to,lastTeam?.to,seasonAvg?.to,'lower'),
+      statRow('FT Att',team.fta,lastTeam?.fta,seasonAvg?.fta,'higher')));
+}
+
 // === POST-GAME REPORT ===
 function PostGameReport({gameId,games,roster}){
   const game=games[gameId];
@@ -706,8 +728,8 @@ function PostGameReport({gameId,games,roster}){
   const compelling=getMostCompelling(game);
   const hustles=objToArr(game.hustlePlays);
   const exportImage=async()=>{const el=reportRef.current;if(!el)return;
-    try{const canvas=await html2canvas(el,{backgroundColor:'#0a0a0a',scale:2});
-      const link=document.createElement('a');link.download=`stormray_vs_${game.opponent}_${game.date}.png`;link.href=canvas.toDataURL();link.click()}catch(e){alert('Export failed: '+e.message)}};
+    try{const canvas=await html2canvas(el,{backgroundColor:'#0A0A0A',scale:2});
+      const link=document.createElement('a');link.download=`shorewood_vs_${game.opponent}_${game.date}.png`;link.href=canvas.toDataURL();link.click()}catch(e){alert('Export failed: '+e.message)}};
   const exportXLS=()=>{const wb=XLSX.utils.book_new();const pids=toArr(game.activePlayers);
     const boxData=[['Player','#','PTS','FGM','FGA','FG%','3PM','3PA','3P%','FTM','FTA','REB','AST','STL','BLK','TO','PF']];
     pids.forEach(pid=>{const p=roster.find(r=>r.id===pid);const s=calcPlayerStats(game,pid);
@@ -721,7 +743,7 @@ function PostGameReport({gameId,games,roster}){
     const hustleData=[['Player','#','Type','Note','Quarter']];
     hustles.forEach(hp=>{const p=roster.find(r=>r.id===hp.pid);hustleData.push([p?.name||'?',p?.number||'',hp.tag,hp.note||'',hp.quarter<=4?`Q${hp.quarter}`:'OT'])});
     XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(hustleData),'Hustle Plays');
-    XLSX.writeFile(wb,`Stormray_vs_${game.opponent}_${game.date}.xlsx`)};
+    XLSX.writeFile(wb,`Shorewood_vs_${game.opponent}_${game.date}.xlsx`)};
   const leaderItems=[{label:'Points',data:leaders.pts},{label:'Rebounds',data:leaders.reb},{label:'Assists',data:leaders.ast},
     {label:'Steals',data:leaders.stl},{label:'Blocks',data:leaders.blk}].filter(l=>l.data&&l.data.value>0);
 
@@ -731,21 +753,21 @@ function PostGameReport({gameId,games,roster}){
       h('button',{className:'btn btn-dark btn-sm',onClick:exportXLS},'📊 Download XLS')),
     h('div',{ref:reportRef,className:'card',style:{padding:24}},
       h('div',{style:{textAlign:'center',marginBottom:24}},
-        h('div',{style:{fontSize:12,color:'var(--blue)',fontWeight:700,letterSpacing:3,textTransform:'uppercase',marginBottom:4}},'Stormray Stats'),
+        h('div',{style:{fontFamily:'Archivo',fontSize:12,color:'var(--blue)',fontWeight:700,letterSpacing:'0.22em',textTransform:'uppercase',marginBottom:4}},'Shorewood Hoops'),
         h('div',{style:{fontSize:22,fontWeight:800,marginBottom:4}},`vs ${game.opponent}`),
         h('div',{style:{fontSize:14,color:'var(--text2)',marginBottom:8}},new Date(game.date).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'})),
         h('div',{style:{fontSize:36,fontWeight:800}},
-          h('span',{style:{color:team.pts>(getOppScore(game))?'var(--green)':'var(--red)'}},team.pts),
+          h('span',{style:{color:team.pts>(game.oppScore||0)?'var(--green)':'var(--red)'}},team.pts),
           h('span',{style:{color:'var(--text2)',margin:'0 12px',fontSize:20}},'—'),
-          h('span',null,getOppScore(game))),
-        h('div',{style:{fontSize:12,color:team.pts>(getOppScore(game))?'var(--green)':'var(--red)',fontWeight:700,marginTop:4}},
-          team.pts>(getOppScore(game))?'WIN':team.pts<(getOppScore(game))?'LOSS':'TIE')),
+          h('span',null,game.oppScore||0)),
+        h('div',{style:{fontSize:12,color:team.pts>(game.oppScore||0)?'var(--green)':'var(--red)',fontWeight:700,marginTop:4}},
+          team.pts>(game.oppScore||0)?'WIN':team.pts<(game.oppScore||0)?'LOSS':'TIE')),
       h('div',{className:'report-section'},h('h3',null,'🏆 Stat Leaders'),
         leaderItems.map(l=>h('div',{key:l.label,className:'leader-row'},
           h('div',null,h('span',{style:{fontSize:12,color:'var(--text2)',marginRight:8}},l.label),
             h('span',{style:{fontWeight:600}},`#${l.data.number} ${l.data.name}`)),
           h('span',{className:'leader-stat'},l.data.value)))),
-      hustles.length>0&&h('div',{className:'report-section'},h('h3',null,'⚡ Stormray Hustle Plays'),
+      hustles.length>0&&h('div',{className:'report-section'},h('h3',null,'⚡ Shorewood Hustle Plays'),
         hustles.map(hp=>{const p=roster.find(r=>r.id===hp.pid);
           return h('div',{key:hp.id,className:'hustle-row'},
             h('span',{style:{fontWeight:600}},p?`#${p.number} ${p.name}`:'?'),
@@ -753,7 +775,9 @@ function PostGameReport({gameId,games,roster}){
             h('span',{className:'hustle-tag'},hp.tag),
             hp.note&&h('span',{style:{fontSize:13,color:'var(--text2)',marginLeft:4}},hp.note))})),
       h('div',{className:'report-section'},h('h3',null,'📊 Team Highlight'),
-        h('div',{className:'compelling-stat'},compelling))));
+        h('div',{className:'compelling-stat'},compelling)),
+      h('div',{className:'report-section',style:{marginTop:16}},h('h3',null,'🎯 Game Goals'),
+        h(GameGoals,{game,gameId,editable:false}))));
 }
 
 // === ROSTER SCREEN ===
@@ -802,7 +826,7 @@ function GameSetupScreen({roster,onStart}){
       h('label',{style:{fontSize:12,color:'var(--text2)',display:'block',marginBottom:8}},'Active Players'),
       roster.map(p=>h('div',{key:p.id,onClick:()=>toggle(p.id),
         style:{display:'flex',alignItems:'center',gap:10,padding:10,marginBottom:4,borderRadius:8,
-          background:selected.includes(p.id)?'rgba(65,105,225,0.15)':'var(--card2)',
+          background:selected.includes(p.id)?'var(--blue-ghost)':'var(--card2)',
           border:`1px solid ${selected.includes(p.id)?'var(--blue)':'var(--border)'}`,cursor:'pointer'}},
         h('div',{style:{width:20,height:20,borderRadius:4,border:'2px solid',borderColor:selected.includes(p.id)?'var(--blue)':'var(--text2)',
           background:selected.includes(p.id)?'var(--blue)':'transparent',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,color:'#fff'}},
@@ -813,8 +837,8 @@ function GameSetupScreen({roster,onStart}){
       onClick:()=>{const gameId=uid();const playerStats={};
         selected.forEach(pid=>{playerStats[pid]={reb:0,ast:0,stl:0,blk:0,to:0,foul:0,ftm:0,ftx:0}});
         const game={id:gameId,opponent:opp.trim(),date:new Date().toISOString().slice(0,10),
-          status:'active',activePlayers:selected,quarter:1,oppScoreByQ:{1:0,2:0,3:0,4:0,5:0},playerStats,shots:{},hustlePlays:{},roles:{}};
-        db.ref('games/'+gameId).set(game);onStart(gameId,game)}},'Start Game'));
+          status:'active',activePlayers:selected,quarter:1,oppScore:0,playerStats,shots:{},hustlePlays:{},roles:{}};
+        db.ref('games/'+gameId).set(game);onStart(gameId)}},'Start Game'));
 }
 
 // === ROLE PICKER ===
@@ -822,6 +846,7 @@ function RolePicker({game,gameId,onPick}){
   const roles=game.roles||{};const taken=Object.values(roles);
   const options=[{key:'offense',icon:'🏀',name:'Offense',desc:'Shot chart, free throws, assists, turnovers'},
     {key:'defense',icon:'🛡️',name:'Defense',desc:'Rebounds, steals, blocks, fouls, hustle plays'},
+    {key:'both',icon:'⚡',name:'Both',desc:'Offense + Defense in one view (solo tracker)'},
     {key:'coach',icon:'📋',name:'Coach',desc:'Full box score, shot chart, hustle feed (read-only)'}];
   return h('div',{style:{textAlign:'center',paddingTop:40}},
     h('div',{style:{fontSize:14,color:'var(--text2)',marginBottom:4}},`vs ${game.opponent}`),
@@ -856,7 +881,7 @@ function SeasonStatsScreen({roster,games}){
       ftm:(s.ftm/gp).toFixed(1),fta:(s.fta/gp).toFixed(1),reb:(s.reb/gp).toFixed(1),ast:(s.ast/gp).toFixed(1),stl:(s.stl/gp).toFixed(1),blk:(s.blk/gp).toFixed(1),to:(s.to/gp).toFixed(1),hustle:s.hustle};
     return{name:`#${p.number} ${p.name}`,gp:s.gp,pts:s.pts,fgm:s.fgm,fga:s.fga,fgp:s.fga?(s.fgm/s.fga*100).toFixed(0)+'%':'-',
       tpm:s.tpm,tpa:s.tpa,tpp:s.tpa?(s.tpm/s.tpa*100).toFixed(0)+'%':'-',ftm:s.ftm,fta:s.fta,reb:s.reb,ast:s.ast,stl:s.stl,blk:s.blk,to:s.to,hustle:s.hustle}});
-  const wins=completed.filter(g=>{const t=calcTeamStats(g);return t.pts>getOppScore(g)}).length,losses=completed.length-wins;
+  const wins=completed.filter(g=>{const t=calcTeamStats(g);return t.pts>(g.oppScore||0)}).length,losses=completed.length-wins;
   return h('div',null,
     h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}},
       h('h2',{style:{margin:0}},'Season Stats'),
@@ -913,10 +938,10 @@ function LeaderboardScreen({roster,games}){
   const completed=Object.values(games).filter(g=>g.status==='completed');
   const categories=calcLeaderboard(roster,completed);
   if(!categories.length)return h('div',{className:'empty'},'No completed games yet. Leaderboards appear after the first game.');
-  const wins=completed.filter(g=>calcTeamStats(g).pts>getOppScore(g)).length,losses=completed.length-wins;
+  const wins=completed.filter(g=>calcTeamStats(g).pts>(g.oppScore||0)).length,losses=completed.length-wins;
   return h('div',null,
     h('div',{style:{textAlign:'center',marginBottom:20}},
-      h('div',{style:{fontSize:12,color:'var(--blue)',fontWeight:700,letterSpacing:3,textTransform:'uppercase',marginBottom:4}},'Stormray Basketball'),
+      h('div',{style:{fontFamily:'Archivo',fontSize:12,color:'var(--blue)',fontWeight:700,letterSpacing:'0.22em',textTransform:'uppercase',marginBottom:4}},'Shorewood Hoops'),
       h('h2',{style:{margin:'0 0 4px',fontSize:22}},'Season Leaderboard'),
       h('div',{style:{fontSize:14,color:'var(--text2)'}},
         `${completed.length} Games Played`,h('span',{style:{margin:'0 8px'}},'·'),
@@ -939,24 +964,18 @@ function LeaderboardScreen({roster,games}){
 // === GAME HISTORY ===
 function GameHistoryScreen({roster,games,onViewReport}){
   const gamesList=Object.values(games).sort((a,b)=>new Date(b.date)-new Date(a.date));
-  const deleteGame=(e,gId)=>{e.stopPropagation();
-    if(confirm('Delete this game and all its stats? This cannot be undone.'))db.ref('games/'+gId).remove()};
   if(!gamesList.length)return h('div',{className:'empty'},'No games yet');
   return h('div',null,h('h2',null,'Game History'),
-    gamesList.map(g=>{const team=calcTeamStats(g);const opp=getOppScore(g);const won=team.pts>opp;
+    gamesList.map(g=>{const team=calcTeamStats(g);const won=team.pts>(g.oppScore||0);
       return h('div',{key:g.id,className:'game-list-item',onClick:()=>g.status==='completed'&&onViewReport(g.id)},
-        h('div',{style:{flex:1}},
+        h('div',null,
           h('div',{className:'game-opponent'},`vs ${g.opponent}`),
           h('div',{className:'game-date'},new Date(g.date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})),
-          h('span',{className:'badge',style:{background:g.status==='active'?'rgba(245,158,11,.2)':'rgba(65,105,225,.1)',
+          h('span',{className:'badge',style:{background:g.status==='active'?'rgba(245,158,11,.2)':'var(--blue-ghost)',
             color:g.status==='active'?'var(--orange)':'var(--blue)',marginTop:4}},g.status==='active'?'LIVE':'FINAL')),
-        h('div',{style:{display:'flex',alignItems:'center',gap:12}},
-          h('div',{style:{textAlign:'right'}},
-            h('div',{className:'game-score',style:{color:won?'var(--green)':'var(--red)'}},`${team.pts} - ${opp}`),
-            g.status==='completed'&&h('div',{style:{fontSize:12,fontWeight:700,color:won?'var(--green)':'var(--red)'}},won?'W':'L')),
-          h('button',{onClick:e=>deleteGame(e,g.id),
-            style:{background:'none',color:'var(--text2)',fontSize:18,padding:8,borderRadius:6,border:'none',cursor:'pointer'},
-            title:'Delete game'},'🗑️')))}));
+        h('div',{style:{textAlign:'right'}},
+          h('div',{className:'game-score',style:{color:won?'var(--green)':'var(--red)'}},`${team.pts} - ${g.oppScore||0}`),
+          g.status==='completed'&&h('div',{style:{fontSize:12,fontWeight:700,color:won?'var(--green)':'var(--red)'}},won?'W':'L')))}));
 }
 
 // === MAIN APP ===
@@ -968,6 +987,7 @@ function App(){
   const [role,setRole]=useState(null);
   const [reportGameId,setReportGameId]=useState(null);
   const [connected,setConnected]=useState(false);
+  const [endGameSnap,setEndGameSnap]=useState(null);
   const resumedRef=useRef(false);
 
   useEffect(()=>{
@@ -984,17 +1004,19 @@ function App(){
     if(g){resumedRef.current=true;setActiveGameId(g.id);setRole(g.roles[DEVICE_ID]);setScreen('live')}
   },[games]);
 
-  // If active game ends (another device ended it), go to report
+  // If active game ends (another device ended it), show snapshot first
   useEffect(()=>{
     if(activeGameId&&games[activeGameId]?.status==='completed'&&screen==='live'){
-      setReportGameId(activeGameId);setScreen('report');setActiveGameId(null);setRole(null)}
+      setEndGameSnap({gameId:activeGameId,game:games[activeGameId]})}
   },[games,activeGameId,screen]);
+  const dismissEndSnap=()=>{const gid=endGameSnap?.gameId;setEndGameSnap(null);
+    setReportGameId(gid);setScreen('report');setActiveGameId(null);setRole(null)};
 
   const activeGames=Object.values(games).filter(g=>g.status==='active');
-  const startGame=(id,gameData)=>{if(gameData)setGames(prev=>({...prev,[id]:gameData}));setActiveGameId(id);setScreen('pickrole')};
+  const startGame=id=>{setActiveGameId(id);setScreen('pickrole')};
   const pickRole=r=>{setRole(r);setScreen('live')};
   const endGame=id=>{db.ref(`games/${id}/roles/${DEVICE_ID}`).remove();
-    setActiveGameId(null);setRole(null);setReportGameId(id);setScreen('report')};
+    setEndGameSnap({gameId:id,game:games[id]})};
   const viewReport=id=>{setReportGameId(id);setScreen('report')};
   const leaveGame=()=>{if(activeGameId)db.ref(`games/${activeGameId}/roles/${DEVICE_ID}`).remove();
     setActiveGameId(null);setRole(null);setScreen('roster')};
@@ -1002,24 +1024,16 @@ function App(){
   const activeGame=activeGameId?games[activeGameId]:null;
   const isLive=screen==='live'&&activeGame;
 
-  // Find any active game for standalone snapshot
-  const anyActiveGame=activeGame||activeGames[0]||null;
-  const anyActiveGameId=activeGameId||(activeGames[0]?.id)||null;
-
   const screens={
     roster:()=>h(RosterScreen,{roster,setRoster}),
     newgame:()=>h(GameSetupScreen,{roster,onStart:startGame}),
     pickrole:()=>activeGame?h(RolePicker,{game:activeGame,gameId:activeGameId,onPick:pickRole}):h('div',{className:'empty'},'Game not found'),
     live:()=>{if(!activeGame)return h('div',{className:'empty'},'No active game');
-      if(role==='offense')return h(OffenseView,{game:activeGame,gameId:activeGameId,roster,onEnd:endGame});
-      if(role==='defense')return h(DefenseView,{game:activeGame,gameId:activeGameId,roster,onEnd:endGame});
-      if(role==='coach')return h(CoachView,{game:activeGame,gameId:activeGameId,roster,onEnd:endGame});
+      if(role==='offense')return h(OffenseView,{game:activeGame,gameId:activeGameId,roster,onEnd:endGame,games});
+      if(role==='defense')return h(DefenseView,{game:activeGame,gameId:activeGameId,roster,onEnd:endGame,games});
+      if(role==='coach')return h(CoachView,{game:activeGame,gameId:activeGameId,roster,onEnd:endGame,games});
+      if(role==='both')return h(BothView,{game:activeGame,gameId:activeGameId,roster,onEnd:endGame,games});
       return h(RolePicker,{game:activeGame,gameId:activeGameId,onPick:pickRole})},
-    snapshot:()=>{const g=anyActiveGame;if(!g)return h('div',{className:'empty'},'No active game — start one to see the snapshot');
-      return h('div',{className:'app',style:{height:'100%',display:'flex',flexDirection:'column'}},
-        h(GameBar,{game:g,gameId:anyActiveGameId,teamPts:calcTeamStats(g).pts,role:'coach'}),
-        h('div',{style:{flex:1,overflow:'auto',padding:'12px'}},
-          h(SnapshotView,{game:g,roster,standalone:true})))},
     report:()=>h(PostGameReport,{gameId:reportGameId,games,roster}),
     history:()=>h(GameHistoryScreen,{roster,games,onViewReport:viewReport}),
     season:()=>h(SeasonStatsScreen,{roster,games}),
@@ -1029,28 +1043,34 @@ function App(){
   return h('div',{className:'app'},
     h('div',{className:'header'},
       h('div',{className:'logo'},
-        h('img',{src:'logo.png',alt:'Shorewood',style:{height:32,width:'auto',objectFit:'contain'}}),h('span',null,'Stormray Stats')),
+        h('span',{className:'mark'},'SW'),h('span',null,'Shorewood Hoops')),
       h('div',{style:{display:'flex',alignItems:'center',gap:8}},
-        h('a',{href:'howto.html',target:'_blank',style:{width:28,height:28,borderRadius:'50%',background:'var(--card2)',border:'1px solid var(--border)',display:'flex',alignItems:'center',justifyContent:'center',color:'var(--text2)',fontSize:14,fontWeight:700,textDecoration:'none'}},'?'),
         h('div',{className:'conn'},h('span',{className:`conn-dot ${connected?'conn-on':'conn-off'}`}),connected?'Live':'Offline'),
         isLive&&h('button',{className:'btn btn-dark btn-sm',onClick:leaveGame},'Leave'),
         activeGameId&&!isLive&&h('button',{className:'btn btn-blue btn-sm',onClick:()=>setScreen('live')},'◉ Live'))),
     !isLive&&h('div',{className:'nav'},
-      [{k:'roster',l:'Roster'},{k:'newgame',l:'New Game'},{k:'history',l:'Games'},
-        ...(activeGames.length>0?[{k:'snapshot',l:'📊 Snapshot'}]:[]),
-        {k:'season',l:'Season'},{k:'leaderboard',l:'Leaders'},{k:'report',l:'Report'}]
+      [{k:'roster',l:'Roster'},{k:'newgame',l:'New Game'},{k:'history',l:'Games'},{k:'season',l:'Season'},{k:'leaderboard',l:'Leaders'},{k:'report',l:'Report'}]
         .map(n=>h('button',{key:n.k,className:screen===n.k?'active':'',onClick:()=>setScreen(n.k)},n.l))),
     // Live game banner on non-live screens
-    !isLive&&screen!=='pickrole'&&screen!=='snapshot'&&activeGames.length>0&&!activeGameId&&h('div',{style:{padding:'8px 16px'}},
+    !isLive&&screen!=='pickrole'&&activeGames.length>0&&!activeGameId&&h('div',{style:{padding:'8px 16px'}},
       activeGames.map(g=>h('div',{key:g.id,className:'live-banner',onClick:()=>{setActiveGameId(g.id);setScreen('pickrole')}},
         h('div',{style:{display:'flex',alignItems:'center',gap:10}},
           h('div',{className:'pulse-dot'}),
           h('div',null,h('div',{style:{fontWeight:700}},`vs ${g.opponent}`),h('div',{style:{fontSize:12,color:'var(--text2)'}},'Game in progress'))),
         h('span',{className:'btn btn-blue btn-sm'},'Join')))),
-    isLive?screens.live():screen==='snapshot'&&anyActiveGame?screens.snapshot():h('div',{className:'screen'},screens[screen]?.()));
+    isLive?screens.live():h('div',{className:'screen'},screens[screen]?.()),
+    endGameSnap&&h(SnapshotModal,{game:endGameSnap.game,gameId:endGameSnap.gameId,games,roster,
+      onClose:dismissEndSnap}));
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(h(App));
+</script>
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('./sw.js').then(r=>console.log('SW registered',r.scope)).catch(e=>console.warn('SW failed',e));
+  });
+}
 </script>
 </body>
 </html>
