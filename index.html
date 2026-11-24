@@ -131,7 +131,7 @@ h2{font-family:'Anton',sans-serif;font-size:22px;font-weight:400;letter-spacing:
 
 /* === IPHONE RESPONSIVE === */
 @media(max-width:430px){
-  .header{padding:8px 12px}.logo{font-size:15px;letter-spacing:1.5px}.logo .bolt{font-size:18px}
+  .header{padding:8px 12px}.logo{font-size:15px;letter-spacing:1.5px}.logo .mark{font-size:18px}
   .nav button{padding:8px 12px;font-size:11px;letter-spacing:0.5px}.screen{padding:12px}
   h2{font-size:17px;margin-bottom:12px}.btn{padding:10px 16px;font-size:14px}.btn-sm{padding:7px 11px;font-size:12px}.btn-lg{padding:14px 20px;font-size:16px}
   .game-bar{padding:8px 12px}.score-display{font-size:22px;letter-spacing:1px}.score-display .vs-label{font-size:10px;margin:0 6px}
@@ -401,6 +401,8 @@ function OffenseView({game,gameId,roster,onEnd,games}){
           return h('button',{key,className:'stat-btn',onClick:()=>addStat(key)},
             h('span',{className:'count'},count),h('span',null,labels[key]))})),
       h('div',{className:'grid4'},
+        h('button',{className:'stat-btn',onClick:()=>db.ref(`games/${gameId}/teamOreb`).set((game.teamOreb||0)+1)},
+          h('span',{className:'count'},game.teamOreb||0),h('span',null,'OREB')),
         h('button',{className:'stat-btn',onClick:()=>db.ref(`games/${gameId}/oppFta`).set((game.oppFta||0)+1)},
           h('span',{className:'count'},game.oppFta||0),h('span',null,'OPP FTA')),
         h('button',{className:'stat-btn undo',onClick:undo},'↩ UNDO')),
@@ -566,6 +568,8 @@ function BothView({game,gameId,roster,onEnd,games}){
             return h('button',{key,className:'stat-btn',onClick:()=>addStat(key)},
               h('span',{className:'count'},count),h('span',null,labels[key]))})),
         h('div',{className:'grid4'},
+          h('button',{className:'stat-btn',onClick:()=>db.ref(`games/${gameId}/teamOreb`).set((game.teamOreb||0)+1)},
+            h('span',{className:'count'},game.teamOreb||0),h('span',null,'OREB')),
           h('button',{className:'stat-btn',onClick:()=>db.ref(`games/${gameId}/oppFta`).set((game.oppFta||0)+1)},
             h('span',{className:'count'},game.oppFta||0),h('span',null,'OPP FTA')),
           h('button',{className:'stat-btn undo',onClick:undo},'↩ UNDO'))))
@@ -719,7 +723,7 @@ function SnapshotModal({game,gameId,games,roster,onClose}){
 }
 
 // === POST-GAME REPORT ===
-function PostGameReport({gameId,games,roster}){
+function PostGameReport({gameId,games,roster,onSnapshot}){
   const game=games[gameId];
   const reportRef=useRef(null);
   if(!game)return h('div',{className:'empty'},'Game not found');
@@ -748,8 +752,9 @@ function PostGameReport({gameId,games,roster}){
     {label:'Steals',data:leaders.stl},{label:'Blocks',data:leaders.blk}].filter(l=>l.data&&l.data.value>0);
 
   return h('div',null,
-    h('div',{style:{display:'flex',gap:8,marginBottom:16}},
-      h('button',{className:'btn btn-blue btn-sm',onClick:exportImage},'📸 Save as Image'),
+    h('div',{style:{display:'flex',gap:8,marginBottom:16,flexWrap:'wrap'}},
+      h('button',{className:'btn btn-blue btn-sm',style:{fontWeight:700},onClick:()=>onSnapshot&&onSnapshot(gameId)},'📊 SNAPSHOT'),
+      h('button',{className:'btn btn-dark btn-sm',onClick:exportImage},'📸 Save as Image'),
       h('button',{className:'btn btn-dark btn-sm',onClick:exportXLS},'📊 Download XLS')),
     h('div',{ref:reportRef,className:'card',style:{padding:24}},
       h('div',{style:{textAlign:'center',marginBottom:24}},
@@ -962,20 +967,26 @@ function LeaderboardScreen({roster,games}){
 }
 
 // === GAME HISTORY ===
-function GameHistoryScreen({roster,games,onViewReport}){
+function GameHistoryScreen({roster,games,onViewReport,onSnapshot}){
   const gamesList=Object.values(games).sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const deleteGame=id=>{if(confirm('Delete this game permanently?'))db.ref(`games/${id}`).remove()};
   if(!gamesList.length)return h('div',{className:'empty'},'No games yet');
   return h('div',null,h('h2',null,'Game History'),
     gamesList.map(g=>{const team=calcTeamStats(g);const won=team.pts>(g.oppScore||0);
-      return h('div',{key:g.id,className:'game-list-item',onClick:()=>g.status==='completed'&&onViewReport(g.id)},
-        h('div',null,
+      return h('div',{key:g.id,className:'game-list-item',style:{position:'relative'}},
+        h('div',{style:{flex:1,cursor:'pointer'},onClick:()=>g.status==='completed'&&onViewReport(g.id)},
           h('div',{className:'game-opponent'},`vs ${g.opponent}`),
           h('div',{className:'game-date'},new Date(g.date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})),
           h('span',{className:'badge',style:{background:g.status==='active'?'rgba(245,158,11,.2)':'var(--blue-ghost)',
             color:g.status==='active'?'var(--orange)':'var(--blue)',marginTop:4}},g.status==='active'?'LIVE':'FINAL')),
-        h('div',{style:{textAlign:'right'}},
+        h('div',{style:{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:6}},
           h('div',{className:'game-score',style:{color:won?'var(--green)':'var(--red)'}},`${team.pts} - ${g.oppScore||0}`),
-          g.status==='completed'&&h('div',{style:{fontSize:12,fontWeight:700,color:won?'var(--green)':'var(--red)'}},won?'W':'L')))}));
+          g.status==='completed'&&h('div',{style:{fontSize:12,fontWeight:700,color:won?'var(--green)':'var(--red)'}},won?'W':'L'),
+          h('div',{style:{display:'flex',gap:4,marginTop:2}},
+            g.status==='completed'&&h('button',{className:'btn btn-dark',style:{padding:'4px 10px',fontSize:11,fontWeight:700,letterSpacing:'0.08em',borderRadius:6},
+              onClick:e=>{e.stopPropagation();onSnapshot(g.id)}},'📊 SNAP'),
+            h('button',{className:'btn btn-danger',style:{padding:'4px 8px',fontSize:11,borderRadius:6},
+              onClick:e=>{e.stopPropagation();deleteGame(g.id)}},'🗑'))))}));
 }
 
 // === MAIN APP ===
@@ -988,6 +999,7 @@ function App(){
   const [reportGameId,setReportGameId]=useState(null);
   const [connected,setConnected]=useState(false);
   const [endGameSnap,setEndGameSnap]=useState(null);
+  const [historySnap,setHistorySnap]=useState(null);
   const resumedRef=useRef(false);
 
   useEffect(()=>{
@@ -1034,8 +1046,8 @@ function App(){
       if(role==='coach')return h(CoachView,{game:activeGame,gameId:activeGameId,roster,onEnd:endGame,games});
       if(role==='both')return h(BothView,{game:activeGame,gameId:activeGameId,roster,onEnd:endGame,games});
       return h(RolePicker,{game:activeGame,gameId:activeGameId,onPick:pickRole})},
-    report:()=>h(PostGameReport,{gameId:reportGameId,games,roster}),
-    history:()=>h(GameHistoryScreen,{roster,games,onViewReport:viewReport}),
+    report:()=>h(PostGameReport,{gameId:reportGameId,games,roster,onSnapshot:id=>setHistorySnap(id)}),
+    history:()=>h(GameHistoryScreen,{roster,games,onViewReport:viewReport,onSnapshot:id=>setHistorySnap(id)}),
     season:()=>h(SeasonStatsScreen,{roster,games}),
     leaderboard:()=>h(LeaderboardScreen,{roster,games}),
   };
@@ -1060,7 +1072,9 @@ function App(){
         h('span',{className:'btn btn-blue btn-sm'},'Join')))),
     isLive?screens.live():h('div',{className:'screen'},screens[screen]?.()),
     endGameSnap&&h(SnapshotModal,{game:endGameSnap.game,gameId:endGameSnap.gameId,games,roster,
-      onClose:dismissEndSnap}));
+      onClose:dismissEndSnap}),
+    historySnap&&games[historySnap]&&h(SnapshotModal,{game:games[historySnap],gameId:historySnap,games,roster,
+      onClose:()=>setHistorySnap(null)}));
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(h(App));
