@@ -248,6 +248,42 @@ function getMostCompelling(game){
 const BASKET_X=250,BASKET_Y=52.5,THREE_R=221.5,CORNER_X=33;
 function is3pt(x,y){if(x<CORNER_X||x>500-CORNER_X)return true;const dx=x-BASKET_X,dy=y-BASKET_Y;return Math.sqrt(dx*dx+dy*dy)>THREE_R}
 
+// === ZONE CLASSIFICATION ===
+const ZONE_DEFS=[
+  {id:'paint',label:'Paint',pos:[250,90]},
+  {id:'midLeft',label:'Mid Left',pos:[95,170]},
+  {id:'midRight',label:'Mid Right',pos:[405,170]},
+  {id:'cornerLeft3',label:'L Corner 3',pos:[16,42]},
+  {id:'cornerRight3',label:'R Corner 3',pos:[484,42]},
+  {id:'wingLeft3',label:'L Wing 3',pos:[48,230]},
+  {id:'wingRight3',label:'R Wing 3',pos:[452,230]},
+  {id:'top3',label:'Top 3',pos:[250,330]}
+];
+function getZone(x,y){
+  const three=is3pt(x,y);
+  if(!three){
+    if(x>=170&&x<=330&&y<=190)return'paint';
+    return x<250?'midLeft':'midRight';
+  }
+  if(x<100)return'cornerLeft3';
+  if(x>400)return'cornerRight3';
+  if(x<210)return'wingLeft3';
+  if(x>290)return'wingRight3';
+  return'top3';
+}
+function calcZoneStats(shots){
+  const z={};ZONE_DEFS.forEach(d=>{z[d.id]={made:0,att:0}});
+  shots.forEach(s=>{const zn=getZone(s.x,s.y);if(z[zn]){z[zn].att++;if(s.made)z[zn].made++}});
+  ZONE_DEFS.forEach(d=>{const zs=z[d.id];zs.pct=zs.att>0?Math.round((zs.made/zs.att)*100):0});
+  return z;
+}
+function getHeatColor(pct,att){
+  if(!att)return'rgba(255,255,255,0.08)';
+  if(pct<=25)return'#2563eb';if(pct<=33)return'#3b82f6';if(pct<=40)return'#60a5fa';
+  if(pct<=45)return'#fbbf24';if(pct<=50)return'#f59e0b';if(pct<=55)return'#f97316';
+  return'#ef4444';
+}
+
 // === HALF COURT SVG ===
 function HalfCourt({shots=[],onTap,selectedPid,readOnly}){
   const svgRef=useRef(null);
@@ -290,6 +326,107 @@ function HalfCourt({shots=[],onTap,selectedPid,readOnly}){
       h('button',{className:'made',onClick:()=>handleResult(true)},'Made ✓'),
       h('button',{className:'missed',onClick:()=>handleResult(false)},'Miss ✗'))
   );
+}
+
+// === ZONE-BASED SHOT CHART ===
+function ShotChartZones({shots=[]}){
+  const zoneStats=calcZoneStats(shots);
+  const arcStartY=Math.sqrt(THREE_R*THREE_R-(BASKET_X-CORNER_X)*(BASKET_X-CORNER_X));
+  const arcY=BASKET_Y+arcStartY;
+  const arcPath=`M ${CORNER_X} 0 L ${CORNER_X} ${arcY} A ${THREE_R} ${THREE_R} 0 0 0 ${500-CORNER_X} ${arcY} L ${500-CORNER_X} 0`;
+  const renderZone=(def)=>{
+    const zs=zoneStats[def.id];const col=getHeatColor(zs.pct,zs.att);
+    const [cx,cy]=def.pos;const isCorner=def.id.includes('corner');
+    const bw=isCorner?30:60,bh=isCorner?36:40;
+    return h('g',{key:def.id},
+      h('rect',{x:cx-bw/2,y:cy-bh/2+2,width:bw,height:bh,rx:4,fill:col,opacity:zs.att?0.82:0.3}),
+      zs.att>0?h(React.Fragment,null,
+        h('text',{x:cx,y:cy-2,textAnchor:'middle',fill:'#fff',fontSize:isCorner?8:10,fontWeight:700,fontFamily:'JetBrains Mono'},`${zs.made}/${zs.att}`),
+        h('text',{x:cx,y:cy+12,textAnchor:'middle',fill:'#fff',fontSize:isCorner?9:12,fontWeight:800,fontFamily:'Bebas Neue'},`${zs.pct}%`)):
+      h('text',{x:cx,y:cy+4,textAnchor:'middle',fill:'#555',fontSize:9,fontFamily:'Archivo'},'—'));
+  };
+  const totalAtt=shots.length,totalMade=shots.filter(s=>s.made).length;
+  return h('div',{style:{position:'relative',width:'100%',height:'100%'}},
+    h('svg',{viewBox:'0 0 500 420',style:{width:'100%',height:'100%'}},
+      h('rect',{x:0,y:0,width:500,height:420,fill:'#111',rx:4}),
+      h('rect',{x:2,y:2,width:496,height:416,fill:'none',stroke:'#333',strokeWidth:2,rx:3}),
+      h('line',{x1:2,y1:418,x2:498,y2:418,stroke:'#333',strokeWidth:2}),
+      h('path',{d:'M 190 418 A 60 60 0 0 1 310 418',fill:'none',stroke:'#333',strokeWidth:1.5}),
+      h('rect',{x:170,y:0,width:160,height:190,fill:'none',stroke:'#004F9E',strokeWidth:1.5,strokeOpacity:0.25}),
+      h('circle',{cx:250,cy:190,r:60,fill:'none',stroke:'#004F9E',strokeWidth:1.5,strokeOpacity:0.2}),
+      h('path',{d:arcPath,fill:'none',stroke:'#004F9E',strokeWidth:2,strokeOpacity:0.35}),
+      h('circle',{cx:250,cy:BASKET_Y,r:8,fill:'none',stroke:'var(--orange)',strokeWidth:2}),
+      ZONE_DEFS.map(renderZone),
+      totalAtt>0&&h('text',{x:250,y:410,textAnchor:'middle',fill:'var(--text2)',fontSize:10,fontFamily:'Archivo'},
+        `Overall: ${totalMade}/${totalAtt} (${Math.round(totalMade/totalAtt*100)}%)`)));
+}
+
+// === SHOT CHART TOGGLE WRAPPER ===
+function ShotChartToggle({shots=[],readOnly=true,roster=[]}){
+  const [mode,setMode]=useState('dots');
+  const [selPids,setSelPids]=useState(null); // null = ALL
+  const [filterOpen,setFilterOpen]=useState(false);
+
+  // Collect players who have shots
+  const shooterPids=useMemo(()=>{
+    const set=new Set();shots.forEach(s=>{if(s.pid)set.add(s.pid)});return [...set];
+  },[shots]);
+  const shooters=useMemo(()=>shooterPids.map(pid=>roster.find(r=>r.id===pid)).filter(Boolean)
+    .sort((a,b)=>Number(a.number)-Number(b.number)),[shooterPids,roster]);
+
+  const togglePid=(pid)=>{
+    if(!selPids){setSelPids([pid]);return}
+    const next=selPids.includes(pid)?selPids.filter(p=>p!==pid):[...selPids,pid];
+    setSelPids(next.length===0?null:next);
+  };
+  const selectAll=()=>setSelPids(null);
+
+  const filtered=selPids?shots.filter(s=>selPids.includes(s.pid)):shots;
+  const hasRoster=roster.length>0&&shooters.length>0;
+
+  // Label for filter button
+  const filterLabel=!selPids?'All Players':selPids.length===1?
+    (()=>{const p=roster.find(r=>r.id===selPids[0]);return p?`#${p.number} ${p.name}`:'1 Player'})():
+    `${selPids.length} Players`;
+
+  return h('div',null,
+    // Controls row: player filter + dots/zones toggle
+    h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',gap:8,marginBottom:6,flexWrap:'wrap'}},
+      hasRoster?h('button',{style:{padding:'4px 10px',fontSize:11,fontFamily:'Archivo',fontWeight:700,letterSpacing:'0.08em',
+        border:'1px solid var(--border)',borderRadius:6,cursor:'pointer',
+        background:filterOpen?'var(--blue)':'var(--card2)',color:filterOpen?'#fff':'var(--text2)',
+        display:'flex',alignItems:'center',gap:4},
+        onClick:()=>setFilterOpen(!filterOpen)},
+        '👤 ',filterLabel,' ▾'):h('div'),
+      h('div',{style:{display:'flex',gap:0}},
+        h('button',{style:{padding:'4px 12px',fontSize:11,fontFamily:'Archivo',fontWeight:700,letterSpacing:'0.1em',
+          border:'1px solid var(--border)',borderRadius:'6px 0 0 6px',cursor:'pointer',
+          background:mode==='dots'?'var(--blue)':'var(--card2)',color:mode==='dots'?'#fff':'var(--text2)'},
+          onClick:()=>setMode('dots')},'DOTS'),
+        h('button',{style:{padding:'4px 12px',fontSize:11,fontFamily:'Archivo',fontWeight:700,letterSpacing:'0.1em',
+          border:'1px solid var(--border)',borderLeft:'none',borderRadius:'0 6px 6px 0',cursor:'pointer',
+          background:mode==='zones'?'var(--blue)':'var(--card2)',color:mode==='zones'?'#fff':'var(--text2)'},
+          onClick:()=>setMode('zones')},'ZONES'))),
+    // Player filter chips
+    hasRoster&&filterOpen&&h('div',{style:{display:'flex',flexWrap:'wrap',gap:4,marginBottom:8,padding:8,
+      background:'var(--card)',border:'1px solid var(--border)',borderRadius:8}},
+      h('button',{style:{padding:'4px 10px',fontSize:11,fontWeight:700,fontFamily:'Archivo',letterSpacing:'0.06em',
+        borderRadius:16,border:'1px solid',cursor:'pointer',
+        borderColor:!selPids?'var(--blue)':'var(--border)',
+        background:!selPids?'var(--blue)':'transparent',color:!selPids?'#fff':'var(--text2)'},
+        onClick:selectAll},'ALL'),
+      shooters.map(p=>h('button',{key:p.id,style:{padding:'4px 10px',fontSize:11,fontWeight:700,fontFamily:'Archivo',
+        letterSpacing:'0.06em',borderRadius:16,border:'1px solid',cursor:'pointer',
+        borderColor:selPids&&selPids.includes(p.id)?'var(--blue)':'var(--border)',
+        background:selPids&&selPids.includes(p.id)?'var(--blue)':'transparent',
+        color:selPids&&selPids.includes(p.id)?'#fff':'var(--text2)'},
+        onClick:()=>togglePid(p.id)},`#${p.number} ${p.name}`))),
+    h('div',{className:'court-container',style:{maxHeight:360}},
+      mode==='dots'?h(HalfCourt,{shots:filtered,readOnly:true}):h(ShotChartZones,{shots:filtered})),
+    h('div',{style:{display:'flex',justifyContent:'center',gap:16,padding:'6px 0',fontSize:12,color:'var(--text2)'}},
+      mode==='dots'&&h(React.Fragment,null,
+        h('span',{style:{color:'var(--green)'}},'● Made: ',filtered.filter(s=>s.made).length),
+        h('span',{style:{color:'var(--red)'}},'● Miss: ',filtered.filter(s=>!s.made).length))));
 }
 
 // === HUSTLE MODAL ===
@@ -989,6 +1126,182 @@ function GameHistoryScreen({roster,games,onViewReport,onSnapshot}){
               onClick:e=>{e.stopPropagation();deleteGame(g.id)}},'🗑'))))}));
 }
 
+// === REPORTS HUB ===
+function ReportsScreen({roster,games,onSnapshot}){
+  const [sub,setSub]=useState('games');
+  const [viewGameId,setViewGameId]=useState(null);
+  const completed=Object.values(games).filter(g=>g.status==='completed');
+
+  if(viewGameId&&games[viewGameId])return h('div',null,
+    h('button',{className:'btn btn-dark btn-sm',style:{marginBottom:12},onClick:()=>setViewGameId(null)},'← Back to Reports'),
+    h(FullGameReport,{gameId:viewGameId,games,roster,onSnapshot}));
+
+  return h('div',null,
+    h('h2',{style:{margin:0,marginBottom:12}},'Reports'),
+    h('div',{className:'tab-bar'},
+      h('button',{className:sub==='games'?'active':'',onClick:()=>setSub('games')},'Game Reports'),
+      h('button',{className:sub==='season'?'active':'',onClick:()=>setSub('season')},'Season Overview')),
+    sub==='games'&&h(GameReportsList,{games,roster,onView:setViewGameId,onSnapshot}),
+    sub==='season'&&h(SeasonOverview,{roster,games}));
+}
+
+function GameReportsList({games,roster,onView,onSnapshot}){
+  const gamesList=Object.values(games).sort((a,b)=>new Date(b.date)-new Date(a.date));
+  if(!gamesList.length)return h('div',{className:'empty'},'No games yet');
+  return h('div',null,gamesList.map(g=>{
+    const team=calcTeamStats(g);const won=team.pts>(g.oppScore||0);
+    return h('div',{key:g.id,className:'game-list-item'},
+      h('div',{style:{flex:1,cursor:'pointer'},onClick:()=>g.status==='completed'&&onView(g.id)},
+        h('div',{className:'game-opponent'},`vs ${g.opponent}`),
+        h('div',{className:'game-date'},new Date(g.date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})),
+        h('span',{className:'badge',style:{background:g.status==='active'?'rgba(245,158,11,.2)':'var(--blue-ghost)',
+          color:g.status==='active'?'var(--orange)':'var(--blue)',marginTop:4}},g.status==='active'?'LIVE':'FINAL')),
+      h('div',{style:{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:4}},
+        h('div',{className:'game-score',style:{color:won?'var(--green)':'var(--red)'}},`${team.pts} - ${g.oppScore||0}`),
+        g.status==='completed'&&h('div',{style:{fontSize:12,fontWeight:700,color:won?'var(--green)':'var(--red)'}},won?'W':'L')))}));
+}
+
+function FullGameReport({gameId,games,roster,onSnapshot}){
+  const game=games[gameId];const reportRef=useRef(null);
+  if(!game)return h('div',{className:'empty'},'Game not found');
+  const team=calcTeamStats(game);const leaders=getStatLeaders(game,roster);
+  const compelling=getMostCompelling(game);const hustles=objToArr(game.hustlePlays);
+  const allShots=objToArr(game.shots);
+  const pids=toArr(game.activePlayers);
+  const exportImage=async()=>{const el=reportRef.current;if(!el)return;
+    try{const canvas=await html2canvas(el,{backgroundColor:'#0A0A0A',scale:2});
+      const link=document.createElement('a');link.download=`shorewood_vs_${game.opponent}_${game.date}.png`;link.href=canvas.toDataURL();link.click()}catch(e){alert('Export failed: '+e.message)}};
+  const exportXLS=()=>{const wb=XLSX.utils.book_new();
+    const boxData=[['Player','#','PTS','FGM','FGA','FG%','3PM','3PA','3P%','FTM','FTA','REB','AST','STL','BLK','TO','PF']];
+    pids.forEach(pid=>{const p=roster.find(r=>r.id===pid);const s=calcPlayerStats(game,pid);
+      boxData.push([p?.name||'?',p?.number||'',s.pts,s.fgm,s.fga,s.fgp+'%',s.tpm,s.tpa,s.tpp+'%',s.ftm,s.fta,s.reb,s.ast,s.stl,s.blk,s.to,s.foul])});
+    boxData.push(['TEAM','',team.pts,team.fgm,team.fga,team.fgp+'%',team.tpm,team.tpa,team.tpp+'%',team.ftm,team.fta,team.reb,team.ast,team.stl,team.blk,team.to,team.foul]);
+    const ws1=XLSX.utils.aoa_to_sheet(boxData);ws1['!cols']=[{wch:18},{wch:4},...Array(15).fill({wch:6})];XLSX.utils.book_append_sheet(wb,ws1,'Box Score');
+    XLSX.writeFile(wb,`Shorewood_vs_${game.opponent}_${game.date}.xlsx`)};
+  const leaderItems=[{label:'Points',data:leaders.pts},{label:'Rebounds',data:leaders.reb},{label:'Assists',data:leaders.ast},
+    {label:'Steals',data:leaders.stl},{label:'Blocks',data:leaders.blk}].filter(l=>l.data&&l.data.value>0);
+
+  return h('div',null,
+    h('div',{style:{display:'flex',gap:8,marginBottom:16,flexWrap:'wrap'}},
+      onSnapshot&&h('button',{className:'btn btn-blue btn-sm',style:{fontWeight:700},onClick:()=>onSnapshot(gameId)},'📊 SNAPSHOT'),
+      h('button',{className:'btn btn-dark btn-sm',onClick:exportImage},'📸 Image'),
+      h('button',{className:'btn btn-dark btn-sm',onClick:exportXLS},'📊 XLS')),
+    h('div',{ref:reportRef,className:'card',style:{padding:20}},
+      // Score header
+      h('div',{style:{textAlign:'center',marginBottom:20}},
+        h('div',{style:{fontFamily:'Archivo',fontSize:11,color:'var(--blue)',fontWeight:700,letterSpacing:'0.22em',textTransform:'uppercase',marginBottom:4}},'Shorewood Hoops'),
+        h('div',{style:{fontSize:20,fontWeight:800,marginBottom:4}},`vs ${game.opponent}`),
+        h('div',{style:{fontSize:13,color:'var(--text2)',marginBottom:6}},new Date(game.date).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'})),
+        h('div',{style:{fontSize:36,fontWeight:800}},
+          h('span',{style:{color:team.pts>(game.oppScore||0)?'var(--green)':'var(--red)'}},team.pts),
+          h('span',{style:{color:'var(--text2)',margin:'0 12px',fontSize:20}},'—'),
+          h('span',null,game.oppScore||0)),
+        h('div',{style:{fontSize:12,color:team.pts>(game.oppScore||0)?'var(--green)':'var(--red)',fontWeight:700,marginTop:4}},
+          team.pts>(game.oppScore||0)?'WIN':team.pts<(game.oppScore||0)?'LOSS':'TIE')),
+      // Shot Chart
+      allShots.length>0&&h('div',{className:'report-section'},
+        h('h3',null,'🎯 Shot Chart'),
+        h(ShotChartToggle,{shots:allShots,roster})),
+      // Box Score
+      h('div',{className:'report-section'},
+        h('h3',null,'📋 Box Score'),
+        h('div',{style:{overflowX:'auto'}},h(BoxScoreTable,{game,roster}))),
+      // Stat Leaders
+      h('div',{className:'report-section'},h('h3',null,'🏆 Stat Leaders'),
+        leaderItems.map(l=>h('div',{key:l.label,className:'leader-row'},
+          h('div',null,h('span',{style:{fontSize:12,color:'var(--text2)',marginRight:8}},l.label),
+            h('span',{style:{fontWeight:600}},`#${l.data.number} ${l.data.name}`)),
+          h('span',{className:'leader-stat'},l.data.value)))),
+      // Hustle Plays
+      hustles.length>0&&h('div',{className:'report-section'},h('h3',null,'⚡ Hustle Plays'),
+        hustles.map(hp=>{const p=roster.find(r=>r.id===hp.pid);
+          return h('div',{key:hp.id,className:'hustle-row'},
+            h('span',{style:{fontWeight:600}},p?`#${p.number} ${p.name}`:'?'),
+            h('span',{style:{margin:'0 8px',color:'var(--text2)'}},'-'),
+            h('span',{className:'hustle-tag'},hp.tag),
+            hp.note&&h('span',{style:{fontSize:13,color:'var(--text2)',marginLeft:4}},hp.note))})),
+      // Team Highlight
+      h('div',{className:'report-section'},h('h3',null,'📊 Team Highlight'),
+        h('div',{className:'compelling-stat'},compelling)),
+      // Game Goals
+      h('div',{className:'report-section'},h('h3',null,'🎯 Game Goals'),
+        h(GameGoals,{game,gameId,editable:false}))));
+}
+
+function SeasonOverview({roster,games}){
+  const completed=Object.values(games).filter(g=>g.status==='completed');
+  if(!completed.length)return h('div',{className:'empty'},'No completed games yet.');
+  const wins=completed.filter(g=>{const t=calcTeamStats(g);return t.pts>(g.oppScore||0)}).length,losses=completed.length-wins;
+
+  // Aggregate all shots across all games
+  const allSeasonShots=[];
+  completed.forEach(g=>{objToArr(g.shots).forEach(s=>allSeasonShots.push(s))});
+
+  // Player season stats
+  const playerSeasonStats={};
+  roster.forEach(p=>{playerSeasonStats[p.id]={gp:0,pts:0,reb:0,ast:0,stl:0,blk:0,to:0,fgm:0,fga:0,tpm:0,tpa:0,ftm:0,fta:0,hustle:0}});
+  completed.forEach(g=>{toArr(g.activePlayers).forEach(pid=>{if(!playerSeasonStats[pid])return;
+    const s=calcPlayerStats(g,pid),ps=playerSeasonStats[pid];
+    ps.gp++;ps.pts+=s.pts;ps.reb+=s.reb;ps.ast+=s.ast;ps.stl+=s.stl;ps.blk+=s.blk;ps.to+=s.to;
+    ps.fgm+=s.fgm;ps.fga+=s.fga;ps.tpm+=s.tpm;ps.tpa+=s.tpa;ps.ftm+=s.ftm;ps.fta+=s.fta;ps.hustle+=s.hustle})});
+  const [mode,setMode]=useState('totals');
+  const cols=[{k:'gp',l:'GP'},{k:'pts',l:'PTS'},{k:'fgm',l:'FGM'},{k:'fga',l:'FGA'},{k:'fgp',l:'FG%'},
+    {k:'tpm',l:'3PM'},{k:'tpa',l:'3PA'},{k:'tpp',l:'3P%'},{k:'ftm',l:'FTM'},{k:'fta',l:'FTA'},
+    {k:'reb',l:'REB'},{k:'ast',l:'AST'},{k:'stl',l:'STL'},{k:'blk',l:'BLK'},{k:'to',l:'TO'},{k:'hustle',l:'HP'}];
+  const rows=roster.filter(p=>playerSeasonStats[p.id]?.gp>0).map(p=>{
+    const s=playerSeasonStats[p.id],gp=s.gp||1;
+    if(mode==='averages')return{name:`#${p.number} ${p.name}`,gp:s.gp,pts:(s.pts/gp).toFixed(1),fgm:(s.fgm/gp).toFixed(1),fga:(s.fga/gp).toFixed(1),
+      fgp:s.fga?(s.fgm/s.fga*100).toFixed(0)+'%':'-',tpm:(s.tpm/gp).toFixed(1),tpa:(s.tpa/gp).toFixed(1),tpp:s.tpa?(s.tpm/s.tpa*100).toFixed(0)+'%':'-',
+      ftm:(s.ftm/gp).toFixed(1),fta:(s.fta/gp).toFixed(1),reb:(s.reb/gp).toFixed(1),ast:(s.ast/gp).toFixed(1),stl:(s.stl/gp).toFixed(1),blk:(s.blk/gp).toFixed(1),to:(s.to/gp).toFixed(1),hustle:s.hustle};
+    return{name:`#${p.number} ${p.name}`,gp:s.gp,pts:s.pts,fgm:s.fgm,fga:s.fga,fgp:s.fga?(s.fgm/s.fga*100).toFixed(0)+'%':'-',
+      tpm:s.tpm,tpa:s.tpa,tpp:s.tpa?(s.tpm/s.tpa*100).toFixed(0)+'%':'-',ftm:s.ftm,fta:s.fta,reb:s.reb,ast:s.ast,stl:s.stl,blk:s.blk,to:s.to,hustle:s.hustle}});
+
+  // Leaderboard
+  const categories=calcLeaderboard(roster,completed);
+
+  return h('div',null,
+    // Season Record
+    h('div',{style:{textAlign:'center',marginBottom:20,padding:16,background:'var(--card)',border:'1px solid var(--border)',borderRadius:12}},
+      h('div',{style:{fontFamily:'Archivo',fontSize:11,color:'var(--blue)',fontWeight:700,letterSpacing:'0.22em',textTransform:'uppercase',marginBottom:4}},'Season Record'),
+      h('div',{style:{fontSize:36,fontWeight:800}},
+        h('span',{style:{color:'var(--green)'}},wins),h('span',{style:{color:'var(--text2)',margin:'0 8px'}},'-'),
+        h('span',{style:{color:losses>0?'var(--red)':'var(--text2)'}},losses)),
+      h('div',{style:{fontSize:13,color:'var(--text2)',marginTop:4}},`${completed.length} Games Played`)),
+
+    // Season Shot Chart
+    allSeasonShots.length>0&&h('div',{style:{marginBottom:20}},
+      h('div',{className:'report-section'},h('h3',null,'🎯 Season Shot Chart (',allSeasonShots.length,' shots)')),
+      h(ShotChartToggle,{shots:allSeasonShots,roster})),
+
+    // Season Stats Table
+    h('div',{style:{marginBottom:20}},
+      h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10}},
+        h('div',{className:'report-section'},h('h3',{style:{margin:0}},'📋 Player Stats')),
+        h('div',{className:'tab-bar',style:{margin:0,width:'auto',gap:4}},
+          h('button',{className:mode==='totals'?'active':'',onClick:()=>setMode('totals'),style:{flex:'none',padding:'6px 12px'}},'Totals'),
+          h('button',{className:mode==='averages'?'active':'',onClick:()=>setMode('averages'),style:{flex:'none',padding:'6px 12px'}},'Avg'))),
+      h('div',{style:{overflowX:'auto'}},
+        h('table',{className:'season-table'},
+          h('thead',null,h('tr',null,h('th',null,'PLAYER'),...cols.map(c=>h('th',{key:c.k},c.l)))),
+          h('tbody',null,rows.map(r=>h('tr',{key:r.name},h('td',null,r.name),...cols.map(c=>h('td',{key:c.k,style:c.k==='pts'?{fontWeight:700,color:'var(--blue)'}:{}},r[c.k])))))))),
+
+    // Leaderboard
+    categories.length>0&&h('div',null,
+      h('div',{className:'report-section'},h('h3',null,'🏆 Season Leaders')),
+      h('div',{style:{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))',gap:10}},
+        categories.map(cat=>h('div',{key:cat.label,className:'card',style:{padding:14}},
+          h('div',{style:{fontSize:10,color:'var(--blue)',fontWeight:700,letterSpacing:1,textTransform:'uppercase',marginBottom:8,display:'flex',alignItems:'center',gap:6}},
+            h('span',null,cat.icon),cat.label),
+          h('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:6}},
+            h('div',{style:{display:'flex',alignItems:'center',gap:8}},
+              h('div',{style:{width:32,height:32,borderRadius:'50%',background:'var(--blue)',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,fontSize:13}},cat.leader.number),
+              h('div',null,h('div',{style:{fontWeight:700,fontSize:14}},cat.leader.name))),
+            h('div',{style:{fontSize:22,fontWeight:800,color:'var(--blue)'}},cat.leader.value)),
+          cat.runners.length>0&&h('div',{style:{borderTop:'1px solid var(--border)',paddingTop:4}},
+            cat.runners.map((r,i)=>h('div',{key:i,style:{display:'flex',justifyContent:'space-between',padding:'2px 0',fontSize:12,color:'var(--text2)'}},
+              h('span',null,`#${i+2} · #${r.number} ${r.name}`),h('span',{style:{fontWeight:700,color:'var(--text)'}},r.value)))))))));
+}
+
 // === MAIN APP ===
 function App(){
   const [roster,setRoster]=useState([]);
@@ -1050,6 +1363,7 @@ function App(){
     history:()=>h(GameHistoryScreen,{roster,games,onViewReport:viewReport,onSnapshot:id=>setHistorySnap(id)}),
     season:()=>h(SeasonStatsScreen,{roster,games}),
     leaderboard:()=>h(LeaderboardScreen,{roster,games}),
+    reports:()=>h(ReportsScreen,{roster,games,onSnapshot:id=>setHistorySnap(id)}),
   };
 
   return h('div',{className:'app'},
@@ -1061,7 +1375,7 @@ function App(){
         isLive&&h('button',{className:'btn btn-dark btn-sm',onClick:leaveGame},'Leave'),
         activeGameId&&!isLive&&h('button',{className:'btn btn-blue btn-sm',onClick:()=>setScreen('live')},'◉ Live'))),
     !isLive&&h('div',{className:'nav'},
-      [{k:'roster',l:'Roster'},{k:'newgame',l:'New Game'},{k:'history',l:'Games'},{k:'season',l:'Season'},{k:'leaderboard',l:'Leaders'},{k:'report',l:'Report'}]
+      [{k:'roster',l:'Roster'},{k:'newgame',l:'New Game'},{k:'history',l:'Games'},{k:'reports',l:'Reports'}]
         .map(n=>h('button',{key:n.k,className:screen===n.k?'active':'',onClick:()=>setScreen(n.k)},n.l))),
     // Live game banner on non-live screens
     !isLive&&screen!=='pickrole'&&activeGames.length>0&&!activeGameId&&h('div',{style:{padding:'8px 16px'}},
