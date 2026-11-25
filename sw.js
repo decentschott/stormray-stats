@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sw-hoops-v2';
+const CACHE_NAME = 'sw-hoops-v3';
 const ASSETS = [
   './',
   './index.html',
