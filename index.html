@@ -199,6 +199,13 @@ const DEVICE_ID = localStorage.getItem('sw_hoops_did') || localStorage.getItem('
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const toArr=v=>Array.isArray(v)?v:(v?Object.values(v):[]);
 const objToArr=o=>o?Object.values(o):[];
+// Game dates. A game's id starts with the moment it was created, so the real local
+// date comes from there. The stored date string is the fallback for any other id format.
+const localDay=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const gameTime=g=>{const t=parseInt(String(g&&g.id||'').slice(0,-5),36);
+  return t>1.6e12&&t<4.1e12?t:(new Date(((g&&g.date)||'')+'T12:00:00').getTime()||0)};
+const gameDate=g=>new Date(gameTime(g));
+const gameDay=g=>localDay(gameDate(g));
 const HUSTLE_TAGS=['Dove for loose ball','Took a charge','Deflection','Box out','Hustle back on D','Saved possession','50/50 ball','Screen & recover'];
 
 // === STAT CALCULATIONS ===
@@ -371,10 +378,8 @@ function ShotChartZones({shots=[]}){
 }
 
 // === SHOT CHART TOGGLE WRAPPER ===
-// Order games oldest -> newest (date is day-level, id is time-based)
-const gameKey=g=>`${g.date||''}|${g.id||''}`;
 const sameOpp=(a,b)=>(a||'').trim().toLowerCase()===(b||'').trim().toLowerCase();
-const fmtGame=g=>`vs ${g.opponent} · ${new Date(g.date+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'})}`;
+const fmtGame=g=>`vs ${g.opponent} · ${gameDate(g).toLocaleDateString('en-US',{month:'short',day:'numeric'})}`;
 // Pass games + gameId to get the This Game / Last Game / Last Matchup / Season switch
 function ShotChartToggle({shots=[],readOnly=true,roster=[],games=null,gameId=null}){
   const [mode,setMode]=useState('dots');
@@ -386,8 +391,8 @@ function ShotChartToggle({shots=[],readOnly=true,roster=[],games=null,gameId=nul
   const scopes=useMemo(()=>{
     const cur=games&&gameId?games[gameId]:null;
     if(!cur)return null;
-    const earlier=Object.values(games).filter(g=>g.id!==gameId&&g.status==='completed'&&gameKey(g)<gameKey(cur))
-      .sort((x,y)=>gameKey(y).localeCompare(gameKey(x)));
+    const earlier=Object.values(games).filter(g=>g.id!==gameId&&g.status==='completed'&&gameTime(g)<gameTime(cur))
+      .sort((x,y)=>gameTime(y)-gameTime(x));
     const last=earlier[0]||null;
     const matchup=earlier.find(g=>sameOpp(g.opponent,cur.opponent))||null;
     const season=Object.values(games).filter(g=>g.status==='completed'||g.id===gameId);
@@ -859,7 +864,7 @@ function OrebButtons({game,gameId}){
 function SnapshotModal({game,gameId,games,roster,onClose}){
   const team=calcTeamStats(game);
   const completed=Object.values(games||{}).filter(g=>g.status==='completed'&&g.id!==gameId);
-  const lastGame=completed.sort((a,b)=>(b.date||'').localeCompare(a.date||''))[0];
+  const lastGame=completed.sort((a,b)=>gameTime(b)-gameTime(a))[0];
   const lastTeam=lastGame?calcTeamStats(lastGame):null;
   // Season averages
   const seasonAvg=completed.length?{pts:0,fgp:0,tpp:0,reb:0,ast:0,stl:0,blk:0,to:0,fta:0}:null;
@@ -917,7 +922,7 @@ function PostGameReport({gameId,games,roster,onSnapshot}){
   const hustles=objToArr(game.hustlePlays);
   const exportImage=async()=>{const el=reportRef.current;if(!el)return;
     try{const canvas=await html2canvas(el,{backgroundColor:'#0A0A0A',scale:2});
-      const link=document.createElement('a');link.download=`shorewood_vs_${game.opponent}_${game.date}.png`;link.href=canvas.toDataURL();link.click()}catch(e){alert('Export failed: '+e.message)}};
+      const link=document.createElement('a');link.download=`shorewood_vs_${game.opponent}_${gameDay(game)}.png`;link.href=canvas.toDataURL();link.click()}catch(e){alert('Export failed: '+e.message)}};
   const exportXLS=()=>{const wb=XLSX.utils.book_new();const pids=toArr(game.activePlayers);
     const boxData=[['Player','#','PTS','FGM','FGA','FG%','3PM','3PA','3P%','FTM','FTA','REB','AST','STL','BLK','TO','PF']];
     pids.forEach(pid=>{const p=roster.find(r=>r.id===pid);const s=calcPlayerStats(game,pid);
@@ -931,7 +936,7 @@ function PostGameReport({gameId,games,roster,onSnapshot}){
     const hustleData=[['Player','#','Type','Note','Quarter']];
     hustles.forEach(hp=>{const p=roster.find(r=>r.id===hp.pid);hustleData.push([p?.name||'?',p?.number||'',hp.tag,hp.note||'',hp.quarter<=4?`Q${hp.quarter}`:'OT'])});
     XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(hustleData),'Hustle Plays');
-    XLSX.writeFile(wb,`Shorewood_vs_${game.opponent}_${game.date}.xlsx`)};
+    XLSX.writeFile(wb,`Shorewood_vs_${game.opponent}_${gameDay(game)}.xlsx`)};
   const leaderItems=[{label:'Points',data:leaders.pts},{label:'Rebounds',data:leaders.reb},{label:'Assists',data:leaders.ast},
     {label:'Steals',data:leaders.stl},{label:'Blocks',data:leaders.blk}].filter(l=>l.data&&l.data.value>0);
 
@@ -944,7 +949,7 @@ function PostGameReport({gameId,games,roster,onSnapshot}){
       h('div',{style:{textAlign:'center',marginBottom:24}},
         h('div',{style:{fontFamily:'Archivo',fontSize:12,color:'var(--blue)',fontWeight:700,letterSpacing:'0.22em',textTransform:'uppercase',marginBottom:4}},'Shorewood Hoops'),
         h('div',{style:{fontSize:22,fontWeight:800,marginBottom:4}},`vs ${game.opponent}`),
-        h('div',{style:{fontSize:14,color:'var(--text2)',marginBottom:8}},new Date(game.date).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'})),
+        h('div',{style:{fontSize:14,color:'var(--text2)',marginBottom:8}},gameDate(game).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'})),
         h('div',{style:{fontSize:36,fontWeight:800}},
           h('span',{style:{color:team.pts>(game.oppScore||0)?'var(--green)':'var(--red)'}},team.pts),
           h('span',{style:{color:'var(--text2)',margin:'0 12px',fontSize:20}},'—'),
@@ -1025,7 +1030,7 @@ function GameSetupScreen({roster,onStart}){
     h('button',{className:'btn btn-blue btn-lg',disabled:!opp.trim()||selected.length===0,
       onClick:()=>{const gameId=uid();const playerStats={};
         selected.forEach(pid=>{playerStats[pid]={reb:0,ast:0,stl:0,blk:0,to:0,foul:0,ftm:0,ftx:0}});
-        const game={id:gameId,opponent:opp.trim(),date:new Date().toISOString().slice(0,10),
+        const game={id:gameId,opponent:opp.trim(),date:localDay(new Date()),
           status:'active',activePlayers:selected,quarter:1,oppScore:0,playerStats,shots:{},hustlePlays:{},roles:{}};
         db.ref('games/'+gameId).set(game);onStart(gameId)}},'Start Game'));
 }
@@ -1152,7 +1157,7 @@ function LeaderboardScreen({roster,games}){
 
 // === GAME HISTORY ===
 function GameHistoryScreen({roster,games,onViewReport,onSnapshot}){
-  const gamesList=Object.values(games).sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const gamesList=Object.values(games).sort((a,b)=>gameTime(b)-gameTime(a));
   const deleteGame=id=>{if(confirm('Delete this game permanently?'))db.ref(`games/${id}`).remove()};
   if(!gamesList.length)return h('div',{className:'empty'},'No games yet');
   return h('div',null,h('h2',null,'Game History'),
@@ -1160,7 +1165,7 @@ function GameHistoryScreen({roster,games,onViewReport,onSnapshot}){
       return h('div',{key:g.id,className:'game-list-item',style:{position:'relative'}},
         h('div',{style:{flex:1,cursor:'pointer'},onClick:()=>g.status==='completed'&&onViewReport(g.id)},
           h('div',{className:'game-opponent'},`vs ${g.opponent}`),
-          h('div',{className:'game-date'},new Date(g.date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})),
+          h('div',{className:'game-date'},gameDate(g).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})),
           h('span',{className:'badge',style:{background:g.status==='active'?'rgba(245,158,11,.2)':'var(--blue-ghost)',
             color:g.status==='active'?'var(--orange)':'var(--blue)',marginTop:4}},g.status==='active'?'LIVE':'FINAL')),
         h('div',{style:{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:6}},
@@ -1193,14 +1198,14 @@ function ReportsScreen({roster,games,onSnapshot}){
 }
 
 function GameReportsList({games,roster,onView,onSnapshot}){
-  const gamesList=Object.values(games).sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const gamesList=Object.values(games).sort((a,b)=>gameTime(b)-gameTime(a));
   if(!gamesList.length)return h('div',{className:'empty'},'No games yet');
   return h('div',null,gamesList.map(g=>{
     const team=calcTeamStats(g);const won=team.pts>(g.oppScore||0);
     return h('div',{key:g.id,className:'game-list-item'},
       h('div',{style:{flex:1,cursor:'pointer'},onClick:()=>g.status==='completed'&&onView(g.id)},
         h('div',{className:'game-opponent'},`vs ${g.opponent}`),
-        h('div',{className:'game-date'},new Date(g.date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})),
+        h('div',{className:'game-date'},gameDate(g).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})),
         h('span',{className:'badge',style:{background:g.status==='active'?'rgba(245,158,11,.2)':'var(--blue-ghost)',
           color:g.status==='active'?'var(--orange)':'var(--blue)',marginTop:4}},g.status==='active'?'LIVE':'FINAL')),
       h('div',{style:{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:4}},
@@ -1217,14 +1222,14 @@ function FullGameReport({gameId,games,roster,onSnapshot}){
   const pids=toArr(game.activePlayers);
   const exportImage=async()=>{const el=reportRef.current;if(!el)return;
     try{const canvas=await html2canvas(el,{backgroundColor:'#0A0A0A',scale:2});
-      const link=document.createElement('a');link.download=`shorewood_vs_${game.opponent}_${game.date}.png`;link.href=canvas.toDataURL();link.click()}catch(e){alert('Export failed: '+e.message)}};
+      const link=document.createElement('a');link.download=`shorewood_vs_${game.opponent}_${gameDay(game)}.png`;link.href=canvas.toDataURL();link.click()}catch(e){alert('Export failed: '+e.message)}};
   const exportXLS=()=>{const wb=XLSX.utils.book_new();
     const boxData=[['Player','#','PTS','FGM','FGA','FG%','3PM','3PA','3P%','FTM','FTA','REB','AST','STL','BLK','TO','PF']];
     pids.forEach(pid=>{const p=roster.find(r=>r.id===pid);const s=calcPlayerStats(game,pid);
       boxData.push([p?.name||'?',p?.number||'',s.pts,s.fgm,s.fga,s.fgp+'%',s.tpm,s.tpa,s.tpp+'%',s.ftm,s.fta,s.reb,s.ast,s.stl,s.blk,s.to,s.foul])});
     boxData.push(['TEAM','',team.pts,team.fgm,team.fga,team.fgp+'%',team.tpm,team.tpa,team.tpp+'%',team.ftm,team.fta,team.reb,team.ast,team.stl,team.blk,team.to,team.foul]);
     const ws1=XLSX.utils.aoa_to_sheet(boxData);ws1['!cols']=[{wch:18},{wch:4},...Array(15).fill({wch:6})];XLSX.utils.book_append_sheet(wb,ws1,'Box Score');
-    XLSX.writeFile(wb,`Shorewood_vs_${game.opponent}_${game.date}.xlsx`)};
+    XLSX.writeFile(wb,`Shorewood_vs_${game.opponent}_${gameDay(game)}.xlsx`)};
   const leaderItems=[{label:'Points',data:leaders.pts},{label:'Rebounds',data:leaders.reb},{label:'Assists',data:leaders.ast},
     {label:'Steals',data:leaders.stl},{label:'Blocks',data:leaders.blk}].filter(l=>l.data&&l.data.value>0);
 
@@ -1238,7 +1243,7 @@ function FullGameReport({gameId,games,roster,onSnapshot}){
       h('div',{style:{textAlign:'center',marginBottom:20}},
         h('div',{style:{fontFamily:'Archivo',fontSize:11,color:'var(--blue)',fontWeight:700,letterSpacing:'0.22em',textTransform:'uppercase',marginBottom:4}},'Shorewood Hoops'),
         h('div',{style:{fontSize:20,fontWeight:800,marginBottom:4}},`vs ${game.opponent}`),
-        h('div',{style:{fontSize:13,color:'var(--text2)',marginBottom:6}},new Date(game.date).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'})),
+        h('div',{style:{fontSize:13,color:'var(--text2)',marginBottom:6}},gameDate(game).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'})),
         h('div',{style:{fontSize:36,fontWeight:800}},
           h('span',{style:{color:team.pts>(game.oppScore||0)?'var(--green)':'var(--red)'}},team.pts),
           h('span',{style:{color:'var(--text2)',margin:'0 12px',fontSize:20}},'—'),
