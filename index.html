@@ -249,27 +249,45 @@ const BASKET_X=250,BASKET_Y=52.5,THREE_R=221.5,CORNER_X=33;
 function is3pt(x,y){if(x<CORNER_X||x>500-CORNER_X)return true;const dx=x-BASKET_X,dy=y-BASKET_Y;return Math.sqrt(dx*dx+dy*dy)>THREE_R}
 
 // === ZONE CLASSIFICATION ===
+// 14 zones cut along the court's own lines: corner line, 3pt arc, lane lines, free throw line.
+const PAINT_L=170,PAINT_R=330,FT_Y=190,ZONE_SPLIT_Y=85,DEEP_Y=345;
+const ARC_Y=BASKET_Y+Math.sqrt(THREE_R*THREE_R-(BASKET_X-CORNER_X)*(BASKET_X-CORNER_X));
+const LANE_ARC_Y=BASKET_Y+Math.sqrt(THREE_R*THREE_R-(BASKET_X-PAINT_L)*(BASKET_X-PAINT_L));
+const ARC=sweep=>`A ${THREE_R} ${THREE_R} 0 0 ${sweep}`;
 const ZONE_DEFS=[
-  {id:'paint',label:'Paint',pos:[250,90]},
-  {id:'midLeft',label:'Mid Left',pos:[95,170]},
-  {id:'midRight',label:'Mid Right',pos:[405,170]},
-  {id:'cornerLeft3',label:'L Corner 3',pos:[16,42]},
-  {id:'cornerRight3',label:'R Corner 3',pos:[484,42]},
-  {id:'wingLeft3',label:'L Wing 3',pos:[48,230]},
-  {id:'wingRight3',label:'R Wing 3',pos:[452,230]},
-  {id:'top3',label:'Top 3',pos:[250,330]}
+  {id:'cornerLeft3',label:'L Corner 3',pos:[16.5,48],small:true,d:`M 0 0 H ${CORNER_X} V ${ARC_Y} H 0 Z`},
+  {id:'baseLeft',label:'L Baseline',pos:[101.5,42],d:`M ${CORNER_X} 0 H ${PAINT_L} V ${ZONE_SPLIT_Y} H ${CORNER_X} Z`},
+  {id:'rimLeft',label:'Rim Left',pos:[208,42],d:`M ${PAINT_L} 0 H 250 V ${ZONE_SPLIT_Y} H ${PAINT_L} Z`},
+  {id:'rimRight',label:'Rim Right',pos:[292,42],d:`M 250 0 H ${PAINT_R} V ${ZONE_SPLIT_Y} H 250 Z`},
+  {id:'baseRight',label:'R Baseline',pos:[398.5,42],d:`M ${PAINT_R} 0 H ${500-CORNER_X} V ${ZONE_SPLIT_Y} H ${PAINT_R} Z`},
+  {id:'cornerRight3',label:'R Corner 3',pos:[483.5,48],small:true,d:`M ${500-CORNER_X} 0 H 500 V ${ARC_Y} H ${500-CORNER_X} Z`},
+  {id:'midLeft',label:'L Wing Mid',pos:[114,148],d:`M ${CORNER_X} ${ZONE_SPLIT_Y} H ${PAINT_L} V ${LANE_ARC_Y} ${ARC(1)} ${CORNER_X} ${ARC_Y} Z`},
+  {id:'laneLeft',label:'Lane Left',pos:[210,137],d:`M ${PAINT_L} ${ZONE_SPLIT_Y} H 250 V ${FT_Y} H ${PAINT_L} Z`},
+  {id:'laneRight',label:'Lane Right',pos:[290,137],d:`M 250 ${ZONE_SPLIT_Y} H ${PAINT_R} V ${FT_Y} H 250 Z`},
+  {id:'midRight',label:'R Wing Mid',pos:[386,148],d:`M ${PAINT_R} ${ZONE_SPLIT_Y} H ${500-CORNER_X} V ${ARC_Y} ${ARC(1)} ${PAINT_R} ${LANE_ARC_Y} Z`},
+  {id:'topKey',label:'Top of Key',pos:[250,226],d:`M ${PAINT_L} ${FT_Y} H ${PAINT_R} V ${LANE_ARC_Y} ${ARC(1)} ${PAINT_L} ${LANE_ARC_Y} Z`},
+  {id:'wingLeft3',label:'L Wing 3',pos:[80,276],d:`M 0 ${ARC_Y} H ${CORNER_X} ${ARC(0)} ${PAINT_L} ${LANE_ARC_Y} V ${DEEP_Y} H 0 Z`},
+  {id:'top3',label:'Top 3',pos:[250,306],d:`M ${PAINT_L} ${LANE_ARC_Y} ${ARC(0)} ${PAINT_R} ${LANE_ARC_Y} V ${DEEP_Y} H ${PAINT_L} Z`},
+  {id:'wingRight3',label:'R Wing 3',pos:[420,276],d:`M ${PAINT_R} ${LANE_ARC_Y} ${ARC(0)} ${500-CORNER_X} ${ARC_Y} H 500 V ${DEEP_Y} H ${PAINT_R} Z`},
+  {id:'deep',label:'Deep',pos:[250,378],d:`M 0 ${DEEP_Y} H 500 V 420 H 0 Z`}
 ];
 function getZone(x,y){
-  const three=is3pt(x,y);
-  if(!three){
-    if(x>=170&&x<=330&&y<=190)return'paint';
-    return x<250?'midLeft':'midRight';
+  if(y>=DEEP_Y)return'deep';
+  if(is3pt(x,y)){
+    if(y<=ARC_Y)return x<250?'cornerLeft3':'cornerRight3';
+    if(x<PAINT_L)return'wingLeft3';
+    if(x>PAINT_R)return'wingRight3';
+    return'top3';
   }
-  if(x<100)return'cornerLeft3';
-  if(x>400)return'cornerRight3';
-  if(x<210)return'wingLeft3';
-  if(x>290)return'wingRight3';
-  return'top3';
+  if(y<ZONE_SPLIT_Y){
+    if(x<PAINT_L)return'baseLeft';
+    if(x>PAINT_R)return'baseRight';
+    return x<250?'rimLeft':'rimRight';
+  }
+  if(x<PAINT_L)return'midLeft';
+  if(x>PAINT_R)return'midRight';
+  if(y<=FT_Y)return x<250?'laneLeft':'laneRight';
+  return'topKey';
 }
 function calcZoneStats(shots){
   const z={};ZONE_DEFS.forEach(d=>{z[d.id]={made:0,att:0}});
@@ -277,10 +295,10 @@ function calcZoneStats(shots){
   ZONE_DEFS.forEach(d=>{const zs=z[d.id];zs.pct=zs.att>0?Math.round((zs.made/zs.att)*100):0});
   return z;
 }
+// Green = hot, yellow = middling, red = cold, faint = no attempts
 function getHeatColor(pct,att){
-  if(!att)return'rgba(255,255,255,0.08)';
-  if(pct<=25)return'#2563eb';if(pct<=33)return'#3b82f6';if(pct<=40)return'#60a5fa';
-  if(pct<=45)return'#fbbf24';if(pct<=50)return'#f59e0b';if(pct<=55)return'#f97316';
+  if(!att)return'rgba(255,255,255,0.05)';
+  if(pct>=40)return'#22c55e';if(pct>=30)return'#f5b301';
   return'#ef4444';
 }
 
@@ -331,32 +349,22 @@ function HalfCourt({shots=[],onTap,selectedPid,readOnly}){
 // === ZONE-BASED SHOT CHART ===
 function ShotChartZones({shots=[]}){
   const zoneStats=calcZoneStats(shots);
-  const arcStartY=Math.sqrt(THREE_R*THREE_R-(BASKET_X-CORNER_X)*(BASKET_X-CORNER_X));
-  const arcY=BASKET_Y+arcStartY;
-  const arcPath=`M ${CORNER_X} 0 L ${CORNER_X} ${arcY} A ${THREE_R} ${THREE_R} 0 0 0 ${500-CORNER_X} ${arcY} L ${500-CORNER_X} 0`;
   const renderZone=(def)=>{
     const zs=zoneStats[def.id];const col=getHeatColor(zs.pct,zs.att);
-    const [cx,cy]=def.pos;const isCorner=def.id.includes('corner');
-    const bw=isCorner?30:60,bh=isCorner?36:40;
+    const [cx,cy]=def.pos;const sm=def.small;
     return h('g',{key:def.id},
-      h('rect',{x:cx-bw/2,y:cy-bh/2+2,width:bw,height:bh,rx:4,fill:col,opacity:zs.att?0.82:0.3}),
+      h('path',{d:def.d,fill:col,fillOpacity:zs.att?0.6:1,stroke:'#0A0A0A',strokeWidth:2.5,strokeLinejoin:'round'}),
       zs.att>0?h(React.Fragment,null,
-        h('text',{x:cx,y:cy-2,textAnchor:'middle',fill:'#fff',fontSize:isCorner?8:10,fontWeight:700,fontFamily:'JetBrains Mono'},`${zs.made}/${zs.att}`),
-        h('text',{x:cx,y:cy+12,textAnchor:'middle',fill:'#fff',fontSize:isCorner?9:12,fontWeight:800,fontFamily:'Bebas Neue'},`${zs.pct}%`)):
-      h('text',{x:cx,y:cy+4,textAnchor:'middle',fill:'#555',fontSize:9,fontFamily:'Archivo'},'—'));
+        h('text',{x:cx,y:cy-1,textAnchor:'middle',fill:'#fff',fontSize:sm?10:15,fontFamily:'Bebas Neue',letterSpacing:sm?0:'0.03em'},`${zs.pct}%`),
+        h('text',{x:cx,y:cy+(sm?10:12),textAnchor:'middle',fill:'#fff',fillOpacity:0.85,fontSize:sm?7.5:10,fontWeight:700,fontFamily:'JetBrains Mono'},`${zs.made}/${zs.att}`)):
+      h('text',{x:cx,y:cy+4,textAnchor:'middle',fill:'#555',fontSize:sm?8:10,fontFamily:'JetBrains Mono'},'0/0'));
   };
   const totalAtt=shots.length,totalMade=shots.filter(s=>s.made).length;
   return h('div',{style:{position:'relative',width:'100%',height:'100%'}},
     h('svg',{viewBox:'0 0 500 420',style:{width:'100%',height:'100%'}},
       h('rect',{x:0,y:0,width:500,height:420,fill:'#111',rx:4}),
-      h('rect',{x:2,y:2,width:496,height:416,fill:'none',stroke:'#333',strokeWidth:2,rx:3}),
-      h('line',{x1:2,y1:418,x2:498,y2:418,stroke:'#333',strokeWidth:2}),
-      h('path',{d:'M 190 418 A 60 60 0 0 1 310 418',fill:'none',stroke:'#333',strokeWidth:1.5}),
-      h('rect',{x:170,y:0,width:160,height:190,fill:'none',stroke:'#004F9E',strokeWidth:1.5,strokeOpacity:0.25}),
-      h('circle',{cx:250,cy:190,r:60,fill:'none',stroke:'#004F9E',strokeWidth:1.5,strokeOpacity:0.2}),
-      h('path',{d:arcPath,fill:'none',stroke:'#004F9E',strokeWidth:2,strokeOpacity:0.35}),
-      h('circle',{cx:250,cy:BASKET_Y,r:8,fill:'none',stroke:'var(--orange)',strokeWidth:2}),
       ZONE_DEFS.map(renderZone),
+      h('circle',{cx:250,cy:BASKET_Y,r:7,fill:'#111',stroke:'var(--orange)',strokeWidth:2}),
       totalAtt>0&&h('text',{x:250,y:410,textAnchor:'middle',fill:'var(--text2)',fontSize:10,fontFamily:'Archivo'},
         `Overall: ${totalMade}/${totalAtt} (${Math.round(totalMade/totalAtt*100)}%)`)));
 }
