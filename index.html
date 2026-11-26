@@ -61,6 +61,7 @@ h2{font-family:'Anton',sans-serif;font-size:22px;font-weight:400;letter-spacing:
 .live-area{flex:1;display:flex;flex-direction:column;overflow:hidden}
 .court-container{flex:1;display:flex;align-items:center;justify-content:center;padding:8px;min-height:0;position:relative;overflow:hidden}
 .court-container svg{width:100%;height:100%;max-height:400px}
+.court-container.chart-view{display:block;flex:none;padding:0}.court-container.chart-view svg{display:block;margin:0 auto;height:auto!important;max-height:440px!important}
 .stat-bar{padding:8px 12px;background:var(--card);border-top:1px solid var(--border);flex-shrink:0}
 .stat-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 4px;border-radius:6px;background:var(--card2);color:var(--text);font-family:'Archivo',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.14em;border:1px solid var(--border);min-height:52px;position:relative}
 .stat-btn .count{font-family:'Bebas Neue',sans-serif;font-size:22px;font-weight:400;color:var(--blue);line-height:1}
@@ -370,17 +371,43 @@ function ShotChartZones({shots=[]}){
 }
 
 // === SHOT CHART TOGGLE WRAPPER ===
-function ShotChartToggle({shots=[],readOnly=true,roster=[]}){
+// Order games oldest -> newest (date is day-level, id is time-based)
+const gameKey=g=>`${g.date||''}|${g.id||''}`;
+const sameOpp=(a,b)=>(a||'').trim().toLowerCase()===(b||'').trim().toLowerCase();
+const fmtGame=g=>`vs ${g.opponent} · ${new Date(g.date+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'})}`;
+// Pass games + gameId to get the This Game / Last Game / Last Matchup / Season switch
+function ShotChartToggle({shots=[],readOnly=true,roster=[],games=null,gameId=null}){
   const [mode,setMode]=useState('dots');
+  const [scope,setScope]=useState('game');
   const [selPids,setSelPids]=useState(null); // null = ALL
   const [filterOpen,setFilterOpen]=useState(false);
 
-  // Collect players who have shots
-  const shooterPids=useMemo(()=>{
-    const set=new Set();shots.forEach(s=>{if(s.pid)set.add(s.pid)});return [...set];
-  },[shots]);
-  const shooters=useMemo(()=>shooterPids.map(pid=>roster.find(r=>r.id===pid)).filter(Boolean)
-    .sort((a,b)=>Number(a.number)-Number(b.number)),[shooterPids,roster]);
+  // Which games feed each scope
+  const scopes=useMemo(()=>{
+    const cur=games&&gameId?games[gameId]:null;
+    if(!cur)return null;
+    const earlier=Object.values(games).filter(g=>g.id!==gameId&&g.status==='completed'&&gameKey(g)<gameKey(cur))
+      .sort((x,y)=>gameKey(y).localeCompare(gameKey(x)));
+    const last=earlier[0]||null;
+    const matchup=earlier.find(g=>sameOpp(g.opponent,cur.opponent))||null;
+    const season=Object.values(games).filter(g=>g.status==='completed'||g.id===gameId);
+    const pull=gs=>{const out=[];gs.forEach(g=>objToArr(g.shots).forEach(sh=>out.push(sh)));return out};
+    return {
+      game:{label:'This Game',shots:pull([cur]),note:fmtGame(cur)},
+      last:{label:'Last Game',shots:last?pull([last]):[],note:last?fmtGame(last):'No earlier game',off:!last},
+      matchup:{label:'Last Matchup',shots:matchup?pull([matchup]):[],note:matchup?fmtGame(matchup):`No earlier game vs ${cur.opponent}`,off:!matchup},
+      season:{label:'Season',shots:pull(season),note:`${season.length} game${season.length===1?'':'s'}`}
+    };
+  },[games,gameId]);
+  const active=scopes?(scopes[scope]&&!scopes[scope].off?scope:'game'):null;
+  const scoped=scopes?scopes[active].shots:shots;
+
+  // Players with shots in this view, plus anyone already selected
+  const shooters=useMemo(()=>{
+    const set=new Set(selPids||[]);scoped.forEach(sh=>{if(sh.pid)set.add(sh.pid)});
+    return [...set].map(pid=>roster.find(r=>r.id===pid)).filter(Boolean)
+      .sort((x,y)=>Number(x.number)-Number(y.number));
+  },[scoped,roster,selPids]);
 
   const togglePid=(pid)=>{
     if(!selPids){setSelPids([pid]);return}
@@ -389,8 +416,11 @@ function ShotChartToggle({shots=[],readOnly=true,roster=[]}){
   };
   const selectAll=()=>setSelPids(null);
 
-  const filtered=selPids?shots.filter(s=>selPids.includes(s.pid)):shots;
+  const filtered=selPids?scoped.filter(sh=>selPids.includes(sh.pid)):scoped;
   const hasRoster=roster.length>0&&shooters.length>0;
+  const made=filtered.filter(sh=>sh.made).length;
+  const threes=filtered.filter(sh=>sh.is3!==undefined?sh.is3:is3pt(sh.x,sh.y));
+  const pct=(m,n)=>n?Math.round(m/n*100)+'%':'—';
 
   // Label for filter button
   const filterLabel=!selPids?'All Players':selPids.length===1?
@@ -398,11 +428,24 @@ function ShotChartToggle({shots=[],readOnly=true,roster=[]}){
     `${selPids.length} Players`;
 
   return h('div',null,
+    // Scope row: this game / last game / last matchup / season
+    scopes&&h('div',{style:{marginBottom:8}},
+      h('div',{style:{display:'flex',border:'1px solid var(--border)',borderRadius:6,overflow:'hidden'}},
+        ['game','last','matchup','season'].map((k,i)=>{const sc=scopes[k];const on=active===k;
+          return h('button',{key:k,disabled:sc.off,style:{flex:1,padding:'7px 2px',fontSize:10,fontFamily:'Archivo',fontWeight:700,
+            letterSpacing:'0.06em',textTransform:'uppercase',border:'none',borderLeft:i?'1px solid var(--border)':'none',
+            cursor:sc.off?'default':'pointer',whiteSpace:'nowrap',
+            background:on?'var(--blue)':'var(--card2)',color:on?'#fff':sc.off?'var(--faint)':'var(--text2)'},
+            onClick:()=>!sc.off&&setScope(k)},sc.label)})),
+      h('div',{style:{fontSize:11,color:'var(--text2)',marginTop:4,textAlign:'center',fontFamily:'JetBrains Mono',letterSpacing:'0.04em'}},
+        scopes[active].note,
+        (scopes.last.off||scopes.matchup.off)&&h('span',{style:{color:'var(--dim)'}},
+          scopes.last.off?' · no earlier game yet':` · first game vs ${games[gameId].opponent}`))),
     // Controls row: player filter + dots/zones toggle
     h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',gap:8,marginBottom:6,flexWrap:'wrap'}},
       hasRoster?h('button',{style:{padding:'4px 10px',fontSize:11,fontFamily:'Archivo',fontWeight:700,letterSpacing:'0.08em',
         border:'1px solid var(--border)',borderRadius:6,cursor:'pointer',
-        background:filterOpen?'var(--blue)':'var(--card2)',color:filterOpen?'#fff':'var(--text2)',
+        background:filterOpen||selPids?'var(--blue)':'var(--card2)',color:filterOpen||selPids?'#fff':'var(--text2)',
         display:'flex',alignItems:'center',gap:4},
         onClick:()=>setFilterOpen(!filterOpen)},
         '👤 ',filterLabel,' ▾'):h('div'),
@@ -429,12 +472,14 @@ function ShotChartToggle({shots=[],readOnly=true,roster=[]}){
         background:selPids&&selPids.includes(p.id)?'var(--blue)':'transparent',
         color:selPids&&selPids.includes(p.id)?'#fff':'var(--text2)'},
         onClick:()=>togglePid(p.id)},`#${p.number} ${p.name}`))),
-    h('div',{className:'court-container',style:{maxHeight:360}},
+    h('div',{className:'court-container chart-view'},
       mode==='dots'?h(HalfCourt,{shots:filtered,readOnly:true}):h(ShotChartZones,{shots:filtered})),
-    h('div',{style:{display:'flex',justifyContent:'center',gap:16,padding:'6px 0',fontSize:12,color:'var(--text2)'}},
-      mode==='dots'&&h(React.Fragment,null,
-        h('span',{style:{color:'var(--green)'}},'● Made: ',filtered.filter(s=>s.made).length),
-        h('span',{style:{color:'var(--red)'}},'● Miss: ',filtered.filter(s=>!s.made).length))));
+    h('div',{style:{display:'flex',justifyContent:'center',flexWrap:'wrap',gap:14,padding:'6px 0',fontSize:12,color:'var(--text2)'}},
+      filtered.length===0?h('span',null,'No shots in this view'):h(React.Fragment,null,
+        h('span',{style:{color:'var(--green)'}},'● Made: ',made),
+        h('span',{style:{color:'var(--red)'}},'● Miss: ',filtered.length-made),
+        h('span',null,'FG: ',pct(made,filtered.length)),
+        h('span',null,'3P: ',pct(threes.filter(sh=>sh.made).length,threes.length)))));
 }
 
 // === HUSTLE MODAL ===
@@ -637,13 +682,7 @@ function CoachView({game,gameId,roster,onEnd,games}){
         h('button',{key:t.k,className:tab===t.k?'active':'',onClick:()=>setTab(t.k)},t.l))),
     h('div',{style:{flex:1,overflow:'auto',padding:'0 12px 12px'}},
       tab==='box'&&h('div',{style:{overflowX:'auto'}},h(BoxScoreTable,{game,roster})),
-      tab==='shots'&&h('div',null,
-        h('div',{className:'court-container',style:{maxHeight:400}},
-          h(HalfCourt,{shots:allShots,readOnly:true})),
-        h('div',{style:{display:'flex',justifyContent:'center',gap:16,padding:8,fontSize:13}},
-          h('span',null,'⬤',{style:{color:'var(--green)',marginRight:4}},' Made: ',allShots.filter(s=>s.made).length),
-          h('span',null,'⬤',{style:{color:'var(--red)',marginRight:4}},' Miss: ',allShots.filter(s=>!s.made).length),
-          h('span',null,'FG: ',teamStats.fgp,'%'),h('span',null,'3P: ',teamStats.tpp,'%'))),
+      tab==='shots'&&h(ShotChartToggle,{shots:allShots,roster,games,gameId}),
       tab==='hustle'&&h('div',null,
         hustles.length===0?h('div',{className:'empty'},'No hustle plays yet'):
         hustles.sort((a,b)=>(b.ts||0)-(a.ts||0)).map(hp=>{
@@ -653,8 +692,8 @@ function CoachView({game,gameId,roster,onEnd,games}){
             h('span',{style:{margin:'0 8px',color:'var(--text2)'}},'-'),
             h('span',{className:'hustle-tag'},hp.tag),
             hp.note&&h('span',{style:{fontSize:13,color:'var(--text2)',marginLeft:4}},hp.note),
-            h('span',{style:{fontSize:11,color:'var(--text2)',marginLeft:8}},hp.quarter<=4?`Q${hp.quarter}`:'OT'))}))),
-    h('div',{style:{padding:'0 12px 8px'}},h(GameGoals,{game,gameId,editable:true})),
+            h('span',{style:{fontSize:11,color:'var(--text2)',marginLeft:8}},hp.quarter<=4?`Q${hp.quarter}`:'OT'))})),
+      h('div',{style:{marginTop:12}},h(GameGoals,{game,gameId,editable:true}))),
     h('div',{style:{padding:'8px 12px',background:'var(--card)',borderTop:'1px solid var(--border)',flexShrink:0}},
       h('button',{className:'btn btn-danger btn-sm',style:{width:'100%'},onClick:endGame},'🏁 End Game')),
     showSnap&&h(SnapshotModal,{game,gameId,games,roster,onClose:()=>setShowSnap(false)}));
@@ -1209,7 +1248,7 @@ function FullGameReport({gameId,games,roster,onSnapshot}){
       // Shot Chart
       allShots.length>0&&h('div',{className:'report-section'},
         h('h3',null,'🎯 Shot Chart'),
-        h(ShotChartToggle,{shots:allShots,roster})),
+        h(ShotChartToggle,{shots:allShots,roster,games,gameId})),
       // Box Score
       h('div',{className:'report-section'},
         h('h3',null,'📋 Box Score'),
